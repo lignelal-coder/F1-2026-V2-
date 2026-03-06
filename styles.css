@@ -3,6 +3,12 @@
   --card: #11111a;
   --accent: #e10600;
   --accent-soft: rgba(225, 6, 0, 0.18);
+  --navy: #0f172a;
+  --navy-soft: rgba(15, 23, 42, 0.6);
+  --yellow: #fed900;
+  --yellow-soft: rgba(254, 217, 0, 0.2);
+  --gray: #64748b;
+  --gray-soft: rgba(100, 116, 139, 0.25);
   --border: #242437;
   --text: #f5f5f7;
   --muted: #a0a3b1;
@@ -55,9 +61,10 @@ body {
   right: 0;
   height: 100%;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(225, 6, 0, 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 30%, rgba(225, 6, 0, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 45%);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(225, 6, 0, 0.2) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 30%, rgba(15, 23, 42, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse 55% 35% at 10% 60%, rgba(254, 217, 0, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(100, 116, 139, 0.06) 0%, transparent 45%);
 }
 
 .header,
@@ -127,7 +134,14 @@ body {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, transparent 0%, #e10600 15%, #e10600 85%, transparent 100%);
+  background: linear-gradient(90deg,
+    var(--navy) 0%,
+    var(--gray) 15%,
+    var(--accent) 35%,
+    var(--yellow) 50%,
+    var(--accent) 65%,
+    var(--gray) 85%,
+    var(--navy) 100%);
 }
 
 .logo-wrap {
@@ -364,7 +378,7 @@ select {
 }
 
 .card {
-  background: var(--card);
+  background: linear-gradient(135deg, var(--card) 0%, rgba(15, 23, 42, 0.4) 100%);
   border-radius: 12px;
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent);
@@ -381,7 +395,7 @@ select {
   margin: -6px 0 10px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--gray);
 }
 
 .hint {
@@ -442,41 +456,25 @@ select {
 }
 
 .race-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-height: 70vh;
   overflow: auto;
   padding-right: 6px;
 }
 
-@media (max-width: 700px) {
-  .race-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-.race-list-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-
-.race-list-column-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0 0 4px 0;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .race {
   border-radius: 10px;
   border: 1px solid var(--border);
+  border-left: 3px solid var(--gray);
   padding: 10px 12px;
   background: rgba(8, 8, 16, 0.9);
+}
+
+.race.race-sprint-weekend {
+  border-left-color: var(--yellow);
+  background: linear-gradient(90deg, rgba(254, 217, 0, 0.06) 0%, rgba(8, 8, 16, 0.9) 20%);
 }
 
 .race.race-locked .race-form input {
@@ -506,12 +504,11 @@ select {
   flex-shrink: 0;
   width: 56px;
   height: 56px;
-  /* Image 640x853, 5x5 grille → cellule ~128x171 ; scale pour 56px hauteur par ligne */
   background-size: 209px 279px;
   background-repeat: no-repeat;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: rgba(225, 5, 0, 0.15);
+  background-color: var(--navy-soft);
 }
 
 .race-name {
@@ -531,8 +528,9 @@ select {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--yellow-soft);
+  color: var(--yellow);
+  border: 1px solid rgba(254, 217, 0, 0.4);
 }
 
 .race-form {
@@ -665,7 +663,15 @@ select {
   font-size: 13px;
 }
 
-.table th,
+.table th {
+  background: var(--navy-soft);
+  color: var(--yellow);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
 .table td {
   padding: 6px 8px;
   border-bottom: 1px solid var(--border);
@@ -673,7 +679,7 @@ select {
 }
 
 .table tbody tr:nth-child(1) td {
-  color: #ffd36b;
+  color: var(--yellow);
 }
 
 .table tbody tr:nth-child(2) td {

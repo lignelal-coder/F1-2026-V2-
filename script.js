@@ -404,31 +404,11 @@ function setRaceCardLocked(cardEl, locked) {
 
 function renderRaces() {
   raceListEl.innerHTML = "";
-
-  const colCourses = document.createElement("div");
-  colCourses.className = "race-list-column race-list-courses";
-  const titleCourses = document.createElement("h3");
-  titleCourses.className = "race-list-column-title";
-  titleCourses.textContent = "Courses";
-
-  const colSprints = document.createElement("div");
-  colSprints.className = "race-list-column race-list-sprints";
-  const titleSprints = document.createElement("h3");
-  titleSprints.className = "race-list-column-title";
-  titleSprints.textContent = "Sprints";
-
-  const racesOnly = RACES.filter((r) => !r.sprint);
-  const sprintRaces = RACES.filter((r) => r.sprint);
-
-  colCourses.appendChild(titleCourses);
-  racesOnly.forEach((race) => colCourses.appendChild(createRaceCard(race)));
-
-  colSprints.appendChild(titleSprints);
-  sprintRaces.forEach((race) => colSprints.appendChild(createRaceCard(race)));
-
-  raceListEl.appendChild(colCourses);
-  raceListEl.appendChild(colSprints);
-
+  RACES.forEach((race) => {
+    const card = createRaceCard(race);
+    if (race.sprint) card.classList.add("race-sprint-weekend");
+    raceListEl.appendChild(card);
+  });
   fillExistingPredictionsAndScores();
 }
 
