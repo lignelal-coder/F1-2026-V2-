@@ -81,6 +81,8 @@ function loadState() {
       return {
         predictions: {},
         results: {},
+        sprintPredictions: {},
+        sprintResults: {},
         seasonPredictions: {},
         players: [...DEFAULT_PLAYERS],
         activePlayer: DEFAULT_PLAYERS[0],
@@ -94,6 +96,8 @@ function loadState() {
     return {
       predictions: parsed.predictions || {},
       results: parsed.results || {},
+      sprintPredictions: parsed.sprintPredictions || {},
+      sprintResults: parsed.sprintResults || {},
       seasonPredictions: parsed.seasonPredictions || {},
       players,
       activePlayer,
@@ -104,6 +108,8 @@ function loadState() {
     return {
       predictions: {},
       results: {},
+      sprintPredictions: {},
+      sprintResults: {},
       seasonPredictions: {},
       players: [...DEFAULT_PLAYERS],
       activePlayer: DEFAULT_PLAYERS[0],
@@ -120,7 +126,17 @@ function scoreRaceForPlayer(raceId, player) {
   const preds = state.predictions[raceId]?.[player];
   const real = state.results[raceId];
   if (!preds || !real) return 0;
+  let pts = 0;
+  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 5;
+  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 3;
+  if (preds[2] && preds[2].toUpperCase() === real[2]?.toUpperCase()) pts += 1;
+  return pts;
+}
 
+function scoreSprintForPlayer(raceId, player) {
+  const preds = state.sprintPredictions[raceId]?.[player];
+  const real = state.sprintResults[raceId];
+  if (!preds || !real) return 0;
   let pts = 0;
   if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 5;
   if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 3;
@@ -129,7 +145,11 @@ function scoreRaceForPlayer(raceId, player) {
 }
 
 function totalScore(player) {
-  return RACES.reduce((sum, race) => sum + scoreRaceForPlayer(race.id, player), 0);
+  return RACES.reduce((sum, race) => {
+    let s = scoreRaceForPlayer(race.id, player);
+    if (race.sprint) s += scoreSprintForPlayer(race.id, player);
+    return sum + s;
+  }, 0);
 }
 
 const playerSelect = document.getElementById("playerSelect");
@@ -391,6 +411,112 @@ function createRaceCard(race) {
   return wrapper;
 }
 
+function createSprintWeekendCard(race) {
+  const wrapper = document.createElement("article");
+  wrapper.className = "race sprint-weekend-card";
+
+  const header = document.createElement("div");
+  header.className = "race-header";
+  const headerLeft = document.createElement("div");
+  headerLeft.className = "race-header-main";
+  const title = document.createElement("div");
+  title.className = "race-name";
+  title.textContent = race.name;
+  const meta = document.createElement("div");
+  meta.className = "race-meta";
+  meta.textContent = new Date(race.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+  meta.appendChild(document.createTextNode(" · "));
+  const sprintTag = document.createElement("span");
+  sprintTag.className = "race-sprint-tag";
+  sprintTag.textContent = "Course + Sprint";
+  meta.appendChild(sprintTag);
+  headerLeft.appendChild(title);
+  headerLeft.appendChild(meta);
+  header.appendChild(headerLeft);
+  const sprite = TRACK_SPRITE[race.id];
+  if (sprite) {
+    const trackEl = document.createElement("div");
+    trackEl.className = "race-track-thumb";
+    trackEl.setAttribute("aria-hidden", "true");
+    trackEl.style.backgroundImage = "url('assets/img/f1-2026-tracks.png')";
+    trackEl.style.backgroundPosition = `-${sprite[0] * 42}px -${sprite[1] * 56}px`;
+    header.appendChild(trackEl);
+  }
+  wrapper.appendChild(header);
+
+  const twoCol = document.createElement("div");
+  twoCol.className = "sprint-weekend-two-col";
+
+  function makeForm(label, storageKey, stateKey) {
+    const col = document.createElement("div");
+    col.className = "sprint-weekend-col";
+    const subTitle = document.createElement("div");
+    subTitle.className = "sprint-weekend-col-title";
+    subTitle.textContent = label;
+    col.appendChild(subTitle);
+    const form = document.createElement("div");
+    form.className = "race-form";
+    const inputs = [];
+    ["1er", "2e", "3e"].forEach((lbl, idx) => {
+      const group = document.createElement("div");
+      const l = document.createElement("label");
+      l.textContent = lbl + " (code pilote)";
+      const input = document.createElement("input");
+      input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
+      input.dataset.position = String(idx);
+      group.appendChild(l);
+      group.appendChild(input);
+      form.appendChild(group);
+      inputs.push(input);
+    });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Sauvegarder";
+    const tag = document.createElement("span");
+    tag.className = "tag-points";
+    tag.textContent = "Points : 0";
+    form.appendChild(btn);
+    form.appendChild(tag);
+    col.appendChild(form);
+    btn.addEventListener("click", () => {
+      const player = playerSelect.value;
+      const preds = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+      if (!preds[0] && !preds[1] && !preds[2]) return;
+      const store = state[storageKey];
+      if (!store[race.id]) store[race.id] = {};
+      store[race.id][player] = preds;
+      saveState();
+      if (stateKey === "predictions") setRaceCardLocked(wrapper, true);
+      else setSprintPartLocked(wrapper, true);
+      renderLeaderboard();
+    });
+    return { col, inputs, btn, tag };
+  }
+
+  const coursePart = makeForm("Course (dimanche)", "predictions", "predictions");
+  const sprintPart = makeForm("Sprint (samedi)", "sprintPredictions", "sprintPredictions");
+  twoCol.appendChild(coursePart.col);
+  twoCol.appendChild(sprintPart.col);
+  wrapper.appendChild(twoCol);
+
+  wrapper._raceId = race.id;
+  wrapper._inputs = coursePart.inputs;
+  wrapper._pointsTag = coursePart.tag;
+  wrapper._saveBtn = coursePart.btn;
+  wrapper._sprintInputs = sprintPart.inputs;
+  wrapper._sprintPointsTag = sprintPart.tag;
+  wrapper._sprintSaveBtn = sprintPart.btn;
+  return wrapper;
+}
+
+function setSprintPartLocked(cardEl, locked) {
+  if (!cardEl._sprintInputs || !cardEl._sprintSaveBtn) return;
+  cardEl._sprintInputs.forEach((input) => { input.disabled = locked; input.readOnly = locked; });
+  cardEl._sprintSaveBtn.disabled = locked;
+  cardEl._sprintSaveBtn.textContent = locked ? "Enregistré" : "Sauvegarder";
+  cardEl.classList.toggle("sprint-part-locked", locked);
+}
+
 function setRaceCardLocked(cardEl, locked) {
   if (!cardEl._inputs || !cardEl._saveBtn) return;
   cardEl._inputs.forEach((input) => {
@@ -404,11 +530,28 @@ function setRaceCardLocked(cardEl, locked) {
 
 function renderRaces() {
   raceListEl.innerHTML = "";
-  RACES.forEach((race) => {
-    const card = createRaceCard(race);
-    if (race.sprint) card.classList.add("race-sprint-weekend");
-    raceListEl.appendChild(card);
-  });
+
+  const racesOnly = RACES.filter((r) => !r.sprint);
+  const sprintWeekends = RACES.filter((r) => r.sprint);
+
+  const sectionCourses = document.createElement("div");
+  sectionCourses.className = "race-list-section";
+  const titleCourses = document.createElement("h3");
+  titleCourses.className = "race-list-section-title";
+  titleCourses.textContent = "Courses (sans sprint)";
+  sectionCourses.appendChild(titleCourses);
+  racesOnly.forEach((race) => sectionCourses.appendChild(createRaceCard(race)));
+  raceListEl.appendChild(sectionCourses);
+
+  const sectionSprint = document.createElement("div");
+  sectionSprint.className = "race-list-section";
+  const titleSprint = document.createElement("h3");
+  titleSprint.className = "race-list-section-title";
+  titleSprint.textContent = "Weekends Sprint (course + sprint)";
+  sectionSprint.appendChild(titleSprint);
+  sprintWeekends.forEach((race) => sectionSprint.appendChild(createSprintWeekendCard(race)));
+  raceListEl.appendChild(sectionSprint);
+
   fillExistingPredictionsAndScores();
 }
 
@@ -417,21 +560,32 @@ function fillExistingPredictionsAndScores() {
 
   raceListEl.querySelectorAll(".race").forEach((el) => {
     const raceId = el._raceId;
-    const inputs = el._inputs;
-    const tag = el._pointsTag;
-
-    const preds = state.predictions[raceId]?.[player];
-    if (preds) {
-      inputs.forEach((input, idx) => {
-        input.value = preds[idx] || "";
-      });
+    if (el.classList.contains("sprint-weekend-card")) {
+      const preds = state.predictions[raceId]?.[player];
+      const sprintPreds = state.sprintPredictions[raceId]?.[player];
+      if (preds) {
+        el._inputs.forEach((input, idx) => { input.value = preds[idx] || ""; });
+      }
+      if (sprintPreds) {
+        el._sprintInputs.forEach((input, idx) => { input.value = sprintPreds[idx] || ""; });
+      }
+      setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
+      setSprintPartLocked(el, !!(sprintPreds && (sprintPreds[0] || sprintPreds[1] || sprintPreds[2])));
+      const ptsRace = scoreRaceForPlayer(raceId, player);
+      const ptsSprint = scoreSprintForPlayer(raceId, player);
+      el._pointsTag.textContent = `Points : ${ptsRace}`;
+      el._sprintPointsTag.textContent = `Points : ${ptsSprint}`;
+    } else {
+      const inputs = el._inputs;
+      const tag = el._pointsTag;
+      const preds = state.predictions[raceId]?.[player];
+      if (preds) {
+        inputs.forEach((input, idx) => { input.value = preds[idx] || ""; });
+      }
+      setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
+      const pts = scoreRaceForPlayer(raceId, player);
+      tag.textContent = `Points actuels : ${pts}`;
     }
-
-    const isLocked = preds && (preds[0] || preds[1] || preds[2]);
-    setRaceCardLocked(el, !!isLocked);
-
-    const pts = scoreRaceForPlayer(raceId, player);
-    tag.textContent = `Points actuels : ${pts}`;
   });
 }
 
@@ -673,6 +827,43 @@ function renderAdminResults() {
     form.appendChild(btnWrap);
     wrap.appendChild(header);
     wrap.appendChild(form);
+
+    if (race.sprint) {
+      const sprintLabel = document.createElement("div");
+      sprintLabel.className = "sprint-weekend-col-title";
+      sprintLabel.textContent = "Résultat Sprint (samedi)";
+      wrap.appendChild(sprintLabel);
+      const formSprint = document.createElement("div");
+      formSprint.className = "race-form admin-sprint-form";
+      const inputsSprint = [];
+      ["1er", "2e", "3e"].forEach((label, idx) => {
+        const group = document.createElement("div");
+        const l = document.createElement("label");
+        l.textContent = label + " (code pilote)";
+        const input = document.createElement("input");
+        input.placeholder = idx === 0 ? "ex: VER" : "ex: HAM";
+        group.appendChild(l);
+        group.appendChild(input);
+        formSprint.appendChild(group);
+        inputsSprint.push(input);
+      });
+      const btnSaveSprint = document.createElement("button");
+      btnSaveSprint.textContent = "Enregistrer Sprint";
+      btnSaveSprint.addEventListener("click", () => {
+        const res = inputsSprint.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+        state.sprintResults[race.id] = res;
+        saveState();
+        renderLeaderboard();
+        renderAdminResults();
+      });
+      formSprint.appendChild(btnSaveSprint);
+      wrap.appendChild(formSprint);
+      const existingSprint = state.sprintResults[race.id];
+      if (existingSprint) {
+        inputsSprint.forEach((inp, idx) => { inp.value = existingSprint[idx] || ""; });
+      }
+    }
+
     resultsAdminEl.appendChild(wrap);
 
     const existing = state.results[race.id];

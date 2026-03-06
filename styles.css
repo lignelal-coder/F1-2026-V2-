@@ -458,10 +458,28 @@ select {
 .race-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   max-height: 70vh;
   overflow: auto;
   padding-right: 6px;
+}
+
+.race-list-section {
+  margin-bottom: 8px;
+}
+
+.race-list-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--yellow);
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.race-list-section .race,
+.race-list-section .sprint-weekend-card {
+  margin-bottom: 12px;
 }
 
 .race {
@@ -472,9 +490,48 @@ select {
   background: rgba(8, 8, 16, 0.9);
 }
 
-.race.race-sprint-weekend {
-  border-left-color: var(--yellow);
-  background: linear-gradient(90deg, rgba(254, 217, 0, 0.06) 0%, rgba(8, 8, 16, 0.9) 20%);
+.sprint-weekend-card {
+  border-left: 3px solid var(--yellow);
+  background: linear-gradient(90deg, rgba(254, 217, 0, 0.08) 0%, rgba(8, 8, 16, 0.9) 18%);
+}
+
+.sprint-weekend-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+  .sprint-weekend-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sprint-weekend-col {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.sprint-weekend-col-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--yellow);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sprint-weekend-card .race-form {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.sprint-weekend-card.sprint-part-locked .sprint-weekend-col:last-child .race-form input {
+  opacity: 0.85;
+  cursor: not-allowed;
 }
 
 .race.race-locked .race-form input {
@@ -576,6 +633,16 @@ select {
   display: flex;
   gap: 6px;
   align-self: flex-end;
+}
+
+.admin-sprint-form {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-sprint-form .race-form-buttons {
+  margin-top: 6px;
 }
 
 .race-form .btn-fetch {
