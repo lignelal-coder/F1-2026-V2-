@@ -80,6 +80,36 @@ body {
   background: #ff291f;
 }
 
+.players-select-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.players-select-current select {
+  min-width: 140px;
+}
+
+#removePlayerBtn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+#removePlayerBtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#removePlayerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 select {
   background: #050308;
   border-radius: 999px;

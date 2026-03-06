@@ -85,29 +85,52 @@ function totalScore(player) {
 const playerSelect = document.getElementById("playerSelect");
 const newPlayerInput = document.getElementById("newPlayerInput");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
+const removePlayerBtn = document.getElementById("removePlayerBtn");
 const raceListEl = document.getElementById("raceList");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 
-function initPlayerSelect() {
-  function refreshOptions() {
-    playerSelect.innerHTML = "";
-    state.players.forEach((p) => {
-      const opt = document.createElement("option");
-      opt.value = p;
-      opt.textContent = p;
-      playerSelect.appendChild(opt);
-    });
-    playerSelect.value = state.activePlayer || state.players[0];
+function refreshPlayerSelectUI() {
+  playerSelect.innerHTML = "";
+  state.players.forEach((p) => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    playerSelect.appendChild(opt);
+  });
+  playerSelect.value = state.activePlayer || state.players[0];
+  if (removePlayerBtn) {
+    removePlayerBtn.disabled = state.players.length <= 1;
   }
+}
 
-  refreshOptions();
+function removeCurrentPlayer() {
+  if (state.players.length <= 1) return;
+  const toRemove = playerSelect.value;
+  state.players = state.players.filter((p) => p !== toRemove);
+  Object.keys(state.predictions).forEach((raceId) => {
+    delete state.predictions[raceId][toRemove];
+  });
+  if (state.activePlayer === toRemove) {
+    state.activePlayer = state.players[0];
+  }
+  saveState();
+  refreshPlayerSelectUI();
+  renderAll();
+}
+
+function initPlayerSelect() {
+  refreshPlayerSelectUI();
 
   playerSelect.addEventListener("change", () => {
     state.activePlayer = playerSelect.value;
     saveState();
     renderAll();
   });
+
+  if (removePlayerBtn) {
+    removePlayerBtn.addEventListener("click", removeCurrentPlayer);
+  }
 
   if (addPlayerBtn && newPlayerInput) {
     addPlayerBtn.addEventListener("click", () => {
@@ -117,7 +140,7 @@ function initPlayerSelect() {
       if (state.players.includes(name)) {
         state.activePlayer = name;
         saveState();
-        refreshOptions();
+        refreshPlayerSelectUI();
         renderAll();
         newPlayerInput.value = "";
         return;
@@ -125,7 +148,7 @@ function initPlayerSelect() {
       state.players.push(name);
       state.activePlayer = name;
       saveState();
-      refreshOptions();
+      refreshPlayerSelectUI();
       renderAll();
       newPlayerInput.value = "";
     });
