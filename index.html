@@ -44,24 +44,24 @@
       </div>
     </section>
 
-    <main id="mainContent" class="layout" style="display: none;">
+    <main id="mainContent" class="main-wrap" style="display: none;">
       <select id="playerSelect" aria-hidden="true" class="sr-only"></select>
-      <section class="card">
-        <h2>Calendrier & Prédictions</h2>
-        <p class="profile-label" id="calendarProfileLabel" aria-live="polite"></p>
-        <div id="raceList" class="race-list"></div>
-      </section>
 
-      <section class="card card-season">
-        <h2>Prédictions fin de saison</h2>
-        <p class="profile-label" id="seasonProfileLabel" aria-live="polite"></p>
-        <p class="hint">Top 3 pilotes et top 3 constructeurs en fin d’année (codes libres).</p>
-        <div id="seasonPredictionsEl"></div>
-      </section>
+      <aside class="f1-2026-visual card" aria-hidden="true">
+        <h2 class="f1-2026-visual-title">F1 2026 — Monoplaces</h2>
+        <img src="assets/img/f1-2026-cars.png" alt="Monoplaces et équipes F1 2026" class="f1-2026-cars-img" />
+      </aside>
 
-      <section class="card">
-        <h2>Classement général</h2>
-        <table class="table" id="leaderboardTable">
+      <div class="layout">
+        <section class="card layout-calendar">
+          <h2>Calendrier & Prédictions</h2>
+          <p class="profile-label" id="calendarProfileLabel" aria-live="polite"></p>
+          <div id="raceList" class="race-list"></div>
+        </section>
+
+        <section class="card layout-leaderboard">
+          <h2>Classement général</h2>
+          <table class="table" id="leaderboardTable">
           <thead>
             <tr>
               <th>#</th>
@@ -70,16 +70,24 @@
             </tr>
           </thead>
           <tbody></tbody>
-        </table>
-      </section>
+          </table>
+        </section>
 
-      <section class="card">
-        <h2>Résultats officiels (admin)</h2>
-        <p class="hint">
+        <section class="card layout-results">
+          <h2>Résultats officiels (admin)</h2>
+          <p class="hint">
           Pour l’instant : saisie manuelle. Plus tard on pourra brancher l’API Ergast.
-        </p>
-        <div id="resultsAdmin"></div>
-      </section>
+          </p>
+          <div id="resultsAdmin"></div>
+        </section>
+
+        <section class="card card-season layout-season">
+          <h2>Prédictions fin de saison</h2>
+          <p class="profile-label" id="seasonProfileLabel" aria-live="polite"></p>
+          <p class="hint">Top 3 pilotes et top 3 constructeurs en fin d'année (codes libres).</p>
+          <div id="seasonPredictionsEl"></div>
+        </section>
+      </div>
     </main>
 
     <footer class="footer">

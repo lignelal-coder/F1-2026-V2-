@@ -59,6 +59,15 @@ const RACES_2026 = [
 
 const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
 
+// Positions du tracé dans l'image sprite calendrier F1 2026 (5 colonnes x 5 lignes, ~128x171 px par cellule)
+const TRACK_SPRITE = {
+  aus: [0, 0], chn: [1, 0], jpn: [2, 0], bah: [3, 0], sau: [4, 0],
+  mia: [0, 1], can: [1, 1], mon: [2, 1], "esp-bar": [3, 1], aut: [4, 1],
+  gbr: [0, 2], bel: [1, 2], hun: [3, 2], ned: [4, 2],
+  ita: [0, 3], "esp-mad": [1, 3], aze: [2, 3], sin: [3, 3], "usa-aus": [4, 3],
+  mex: [0, 4], bra: [1, 4], "usa-veg": [2, 4], qat: [3, 4], abu: [4, 4]
+};
+
 function getStorageKey() {
   return "f1-" + SEASON_YEAR + "-predictions-v1";
 }
@@ -291,6 +300,9 @@ function createRaceCard(race) {
   const header = document.createElement("div");
   header.className = "race-header";
 
+  const headerLeft = document.createElement("div");
+  headerLeft.className = "race-header-main";
+
   const title = document.createElement("div");
   title.className = "race-name";
   title.textContent = race.name;
@@ -311,8 +323,20 @@ function createRaceCard(race) {
     meta.appendChild(sprintTag);
   }
 
-  header.appendChild(title);
-  header.appendChild(meta);
+  headerLeft.appendChild(title);
+  headerLeft.appendChild(meta);
+  header.appendChild(headerLeft);
+
+  const sprite = TRACK_SPRITE[race.id];
+  if (sprite) {
+    const trackEl = document.createElement("div");
+    trackEl.className = "race-track-thumb";
+    trackEl.setAttribute("aria-hidden", "true");
+    const [sx, sy] = sprite;
+    trackEl.style.backgroundImage = "url('assets/img/f1-2026-tracks.png')";
+    trackEl.style.backgroundPosition = `-${sx * 42}px -${sy * 56}px`;
+    header.appendChild(trackEl);
+  }
 
   const form = document.createElement("div");
   form.className = "race-form";
@@ -380,10 +404,31 @@ function setRaceCardLocked(cardEl, locked) {
 
 function renderRaces() {
   raceListEl.innerHTML = "";
-  RACES.forEach((race) => {
-    const card = createRaceCard(race);
-    raceListEl.appendChild(card);
-  });
+
+  const colCourses = document.createElement("div");
+  colCourses.className = "race-list-column race-list-courses";
+  const titleCourses = document.createElement("h3");
+  titleCourses.className = "race-list-column-title";
+  titleCourses.textContent = "Courses";
+
+  const colSprints = document.createElement("div");
+  colSprints.className = "race-list-column race-list-sprints";
+  const titleSprints = document.createElement("h3");
+  titleSprints.className = "race-list-column-title";
+  titleSprints.textContent = "Sprints";
+
+  const racesOnly = RACES.filter((r) => !r.sprint);
+  const sprintRaces = RACES.filter((r) => r.sprint);
+
+  colCourses.appendChild(titleCourses);
+  racesOnly.forEach((race) => colCourses.appendChild(createRaceCard(race)));
+
+  colSprints.appendChild(titleSprints);
+  sprintRaces.forEach((race) => colSprints.appendChild(createRaceCard(race)));
+
+  raceListEl.appendChild(colCourses);
+  raceListEl.appendChild(colSprints);
+
   fillExistingPredictionsAndScores();
 }
 

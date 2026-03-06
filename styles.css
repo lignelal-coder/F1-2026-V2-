@@ -62,10 +62,50 @@ body {
 
 .header,
 .profile-choice,
+.main-wrap,
 .layout,
 .footer {
   position: relative;
   z-index: 1;
+}
+
+.main-wrap {
+  padding: 18px 22px 24px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .main-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f1-2026-visual {
+  position: sticky;
+  top: 100px;
+  text-align: center;
+  padding: 12px;
+}
+
+.f1-2026-visual-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.f1-2026-cars-img {
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
 }
 
 .header {
@@ -304,15 +344,17 @@ select {
 
 .layout {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1.4fr 1.3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
-  padding: 18px 22px 24px;
+  min-width: 0;
 }
 
-@media (max-width: 1200px) {
-  .layout {
-    grid-template-columns: 1fr 1fr;
-  }
+.layout-calendar {
+  grid-column: 1 / -1;
+}
+
+.layout-leaderboard {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 960px) {
@@ -400,12 +442,34 @@ select {
 }
 
 .race-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
   max-height: 70vh;
   overflow: auto;
   padding-right: 6px;
+}
+
+@media (max-width: 700px) {
+  .race-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.race-list-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.race-list-column-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .race {
@@ -428,8 +492,26 @@ select {
 .race-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 6px;
+}
+
+.race-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.race-track-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  /* Image 640x853, 5x5 grille → cellule ~128x171 ; scale pour 56px hauteur par ligne */
+  background-size: 209px 279px;
+  background-repeat: no-repeat;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: rgba(225, 5, 0, 0.15);
 }
 
 .race-name {

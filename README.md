@@ -1,6 +1,13 @@
+## F1 2026 — Prédictions
+
+- **App en ligne :** [https://allliiiii-58q4w22b0-lignelal-coders-projects.vercel.app/](https://allliiiii-58q4w22b0-lignelal-coders-projects.vercel.app/)
+- **Projet Vercel :** [alliiig — Overview](https://vercel.com/lignelal-coders-projects/alliiig)
+
+---
+
 ## Contenu
 
-Ce dossier contient principalement des *assets* front-end (fichiers compilés/minifiés) : JavaScript, CSS et CSS Modules, plus une image.
+Ce dossier contient l’application de prédictions F1 2026 (HTML, CSS, JS) et des *assets* front-end (fichiers compilés/minifiés) : JavaScript, CSS et CSS Modules, plus des images.
 
 ## Structure
 
