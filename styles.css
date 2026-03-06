@@ -1,0 +1,200 @@
+:root {
+  --bg: #050308;
+  --card: #11111a;
+  --accent: #e10600;
+  --accent-soft: rgba(225, 6, 0, 0.18);
+  --border: #242437;
+  --text: #f5f5f7;
+  --muted: #a0a3b1;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #24101a 0, #050308 45%);
+  color: var(--text);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(to right, #050308, #151520);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.players-select label {
+  margin-right: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+select {
+  background: #050308;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  color: var(--text);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 2fr 1.4fr 1.3fr;
+  gap: 16px;
+  padding: 18px 22px 24px;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.45);
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.hint {
+  margin-top: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.race-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 70vh;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.race {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  background: rgba(8, 8, 16, 0.9);
+}
+
+.race-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.race-name {
+  font-weight: 600;
+}
+
+.race-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.race-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.race-form label {
+  font-size: 12px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.race-form input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  font-size: 13px;
+  background: #050308;
+  color: var(--text);
+}
+
+.race-form button {
+  align-self: flex-end;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.race-form button:hover {
+  background: #ff291f;
+}
+
+.tag-points {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.table tbody tr:nth-child(1) td {
+  color: #ffd36b;
+}
+
+.table tbody tr:nth-child(2) td {
+  color: #e0e4ff;
+}
+
+.table tbody tr:nth-child(3) td {
+  color: #e0c1ff;
+}
+
+.footer {
+  padding: 8px 22px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
