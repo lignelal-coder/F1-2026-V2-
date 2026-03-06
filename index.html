@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Assets lignelal-coder F1 2026</title>
+    <link rel="icon" href="./assets/img/265831400.png" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0b1020;
+        --card: rgba(255, 255, 255, 0.06);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --border: rgba(255, 255, 255, 0.14);
+        --link: #7ab7ff;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f8ff;
+          --card: rgba(10, 20, 60, 0.05);
+          --text: rgba(5, 10, 25, 0.92);
+          --muted: rgba(5, 10, 25, 0.68);
+          --border: rgba(10, 20, 60, 0.18);
+          --link: #0b56d0;
+        }
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(122, 183, 255, 0.25), transparent 60%),
+          radial-gradient(900px 500px at 90% 0%, rgba(140, 120, 255, 0.2), transparent 55%), var(--bg);
+        color: var(--text);
+      }
+      main {
+        max-width: 960px;
+        padding: 56px 20px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+      p {
+        margin: 0 0 22px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .card h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .card a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      .card a:hover {
+        text-decoration: underline;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.95em;
+      }
+      footer {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Assets front-end</h1>
+      <p>
+        Déploiement statique pour héberger un ensemble de fichiers compilés (<code>.js</code>, <code>.css</code>,
+        <code>*.module.css</code>), plus une image.
+      </p>
+
+      <div class="grid">
+        <section class="card">
+          <h2>JavaScript</h2>
+          <p>Fichiers dans <code>assets/js/</code>.</p>
+          <a href="./assets/js/">Ouvrir le dossier</a>
+        </section>
+
+        <section class="card">
+          <h2>CSS</h2>
+          <p>Fichiers dans <code>assets/css/</code>.</p>
+          <a href="./assets/css/">Ouvrir le dossier</a>
+        </section>
+
+        <section class="card">
+          <h2>CSS Modules</h2>
+          <p>Fichiers dans <code>assets/css-modules/</code>.</p>
+          <a href="./assets/css-modules/">Ouvrir le dossier</a>
+        </section>
+
+        <section class="card">
+          <h2>Images</h2>
+          <p>Fichiers dans <code>assets/img/</code>.</p>
+          <a href="./assets/img/">Ouvrir le dossier</a>
+        </section>
+      </div>
+
+      <footer>
+        Voir aussi <a href="./README.md">README.md</a>.
+      </footer>
+    </main>
+  </body>
+</html>
+
