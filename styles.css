@@ -285,6 +285,28 @@ select {
   background: #ff291f;
 }
 
+.race-form-buttons {
+  display: flex;
+  gap: 6px;
+  align-self: flex-end;
+}
+
+.race-form .btn-fetch {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.race-form .btn-fetch:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.race-form .btn-fetch:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .tag-points {
   margin-left: 6px;
   padding: 2px 8px;

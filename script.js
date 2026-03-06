@@ -290,9 +290,32 @@ function renderLeaderboard() {
   fillExistingPredictionsAndScores();
 }
 
+function fetchRaceResultsFromAPI(round, year) {
+  const url = `https://ergast.com/api/f1/${year}/${round}/results.json`;
+  return fetch(url)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Réseau"))))
+    .catch(() => {
+      const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+      return fetch(proxyUrl).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Indisponible"))));
+    })
+    .then((data) => {
+      const races = data?.MRData?.RaceTable?.Races;
+      if (!races || races.length === 0) return null;
+      const results = races[0].Results;
+      if (!results || results.length < 3) return null;
+      const top3 = results
+        .sort((a, b) => parseInt(a.position, 10) - parseInt(b.position, 10))
+        .slice(0, 3)
+        .map((r) => (r.Driver && r.Driver.code) || "");
+      return top3;
+    });
+}
+
 function renderAdminResults() {
   resultsAdminEl.innerHTML = "";
-  RACES_2026.forEach((race) => {
+  const year = 2026;
+  RACES_2026.forEach((race, index) => {
+    const round = index + 1;
     const wrap = document.createElement("div");
     wrap.className = "race";
     const header = document.createElement("div");
@@ -328,10 +351,10 @@ function renderAdminResults() {
       inputs.push(input);
     });
 
-    const btn = document.createElement("button");
-    btn.textContent = "Enregistrer";
+    const btnSave = document.createElement("button");
+    btnSave.textContent = "Enregistrer";
 
-    btn.addEventListener("click", () => {
+    btnSave.addEventListener("click", () => {
       const results = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
       if (!state.results[race.id]) state.results[race.id] = [];
       state.results[race.id] = results;
@@ -339,7 +362,48 @@ function renderAdminResults() {
       renderLeaderboard();
     });
 
-    form.appendChild(btn);
+    const btnFetch = document.createElement("button");
+    btnFetch.className = "btn-fetch";
+    btnFetch.textContent = "Récupérer auto";
+    btnFetch.title = "Remplir avec les résultats officiels (API Ergast)";
+
+    btnFetch.addEventListener("click", async () => {
+      btnFetch.disabled = true;
+      btnFetch.textContent = "…";
+      try {
+        const top3 = await fetchRaceResultsFromAPI(round, year);
+        if (top3 && top3.length >= 3) {
+          inputs[0].value = top3[0] || "";
+          inputs[1].value = top3[1] || "";
+          inputs[2].value = top3[2] || "";
+          state.results[race.id] = top3;
+          saveState();
+          renderLeaderboard();
+        } else {
+          btnFetch.textContent = "Aucun résultat";
+          setTimeout(() => {
+            btnFetch.textContent = "Récupérer auto";
+            btnFetch.disabled = false;
+          }, 2000);
+          return;
+        }
+      } catch (e) {
+        btnFetch.textContent = "Erreur";
+        setTimeout(() => {
+          btnFetch.textContent = "Récupérer auto";
+          btnFetch.disabled = false;
+        }, 2000);
+        return;
+      }
+      btnFetch.textContent = "Récupérer auto";
+      btnFetch.disabled = false;
+    });
+
+    const btnWrap = document.createElement("div");
+    btnWrap.className = "race-form-buttons";
+    btnWrap.appendChild(btnFetch);
+    btnWrap.appendChild(btnSave);
+    form.appendChild(btnWrap);
     wrap.appendChild(header);
     wrap.appendChild(form);
     resultsAdminEl.appendChild(wrap);
