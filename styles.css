@@ -481,6 +481,60 @@ select {
   cursor: wait;
 }
 
+.results-admin-topbar {
+  margin-bottom: 14px;
+}
+
+.btn-fetch-all {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(225, 6, 0, 0.15);
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-fetch-all:hover:not(:disabled) {
+  background: rgba(225, 6, 0, 0.25);
+}
+
+.btn-fetch-all:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.results-comparison {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.results-comparison-official {
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.results-comparison-official strong {
+  color: var(--text);
+}
+
+.results-comparison-player {
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
+.pred-correct {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.pred-wrong {
+  color: #e10600;
+  font-weight: 600;
+}
+
 .tag-points {
   margin-left: 6px;
   padding: 2px 8px;

@@ -380,9 +380,79 @@ function fetchRaceResultsFromAPI(round, year) {
     });
 }
 
+function renderResultsComparison(race, wrap) {
+  const official = state.results[race.id];
+  if (!official || official.length < 3) return;
+
+  const box = document.createElement("div");
+  box.className = "results-comparison";
+
+  const officialLine = document.createElement("div");
+  officialLine.className = "results-comparison-official";
+  officialLine.innerHTML = `Résultat officiel : 1er <strong>${official[0] || "—"}</strong>, 2e <strong>${official[1] || "—"}</strong>, 3e <strong>${official[2] || "—"}</strong>`;
+  box.appendChild(officialLine);
+
+  state.players.forEach((playerName) => {
+    const preds = state.predictions[race.id]?.[playerName];
+    const line = document.createElement("div");
+    line.className = "results-comparison-player";
+
+    const positions = [["1er", 0], ["2e", 1], ["3e", 2]];
+    const parts = positions.map(([label, idx]) => {
+      const pred = (preds && preds[idx]) ? preds[idx].toUpperCase() : "—";
+      const off = (official[idx] || "").toUpperCase();
+      const ok = pred && off && pred === off;
+      const span = document.createElement("span");
+      span.className = ok ? "pred-correct" : "pred-wrong";
+      span.textContent = `${label} ${pred} ${ok ? "✓" : "✗"}`;
+      span.title = ok ? "Correct" : "Incorrect";
+      return span;
+    });
+
+    line.appendChild(document.createTextNode(`${playerName} : `));
+    parts.forEach((span, i) => {
+      if (i > 0) line.appendChild(document.createTextNode(" · "));
+      line.appendChild(span);
+    });
+    box.appendChild(line);
+  });
+
+  wrap.appendChild(box);
+}
+
 function renderAdminResults() {
   resultsAdminEl.innerHTML = "";
+
   const year = 2026;
+  const topBar = document.createElement("div");
+  topBar.className = "results-admin-topbar";
+  const btnFetchAll = document.createElement("button");
+  btnFetchAll.type = "button";
+  btnFetchAll.className = "btn-fetch-all";
+  btnFetchAll.textContent = "Récupérer tous les résultats (API)";
+  btnFetchAll.title = "Remplir toutes les courses avec l’API Ergast (année " + year + ")";
+  btnFetchAll.addEventListener("click", async () => {
+    btnFetchAll.disabled = true;
+    btnFetchAll.textContent = "Récupération…";
+    let filled = 0;
+    for (let r = 0; r < RACES_2026.length; r++) {
+      try {
+        const top3 = await fetchRaceResultsFromAPI(r + 1, year);
+        if (top3 && top3.length >= 3) {
+          state.results[RACES_2026[r].id] = top3;
+          filled++;
+        }
+      } catch (_) {}
+    }
+    saveState();
+    renderLeaderboard();
+    renderAdminResults();
+    btnFetchAll.textContent = filled ? `Récupérer tous (${filled} course(s) remplies)` : "Récupérer tous les résultats (API)";
+    btnFetchAll.disabled = false;
+  });
+  topBar.appendChild(btnFetchAll);
+  resultsAdminEl.appendChild(topBar);
+
   RACES_2026.forEach((race, index) => {
     const round = index + 1;
     const wrap = document.createElement("div");
@@ -429,6 +499,7 @@ function renderAdminResults() {
       state.results[race.id] = results;
       saveState();
       renderLeaderboard();
+      renderAdminResults();
     });
 
     const btnFetch = document.createElement("button");
@@ -448,6 +519,7 @@ function renderAdminResults() {
           state.results[race.id] = top3;
           saveState();
           renderLeaderboard();
+          renderAdminResults();
         } else {
           btnFetch.textContent = "Aucun résultat";
           setTimeout(() => {
@@ -483,6 +555,8 @@ function renderAdminResults() {
         input.value = existing[idx] || "";
       });
     }
+
+    renderResultsComparison(race, wrap);
   });
 }
 
