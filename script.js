@@ -40,18 +40,21 @@ function loadState() {
         results: {},
         seasonPredictions: {},
         players: [...DEFAULT_PLAYERS],
-        activePlayer: DEFAULT_PLAYERS[0]
+        activePlayer: DEFAULT_PLAYERS[0],
+        lockedProfile: null
       };
     }
     const parsed = JSON.parse(raw);
     const players = Array.isArray(parsed.players) && parsed.players.length ? parsed.players : [...DEFAULT_PLAYERS];
     const activePlayer = parsed.activePlayer && players.includes(parsed.activePlayer) ? parsed.activePlayer : players[0];
+    const lockedProfile = parsed.lockedProfile && players.includes(parsed.lockedProfile) ? parsed.lockedProfile : null;
     return {
       predictions: parsed.predictions || {},
       results: parsed.results || {},
       seasonPredictions: parsed.seasonPredictions || {},
       players,
-      activePlayer
+      activePlayer,
+      lockedProfile
     };
   } catch (e) {
     console.error("Erreur de chargement du state", e);
@@ -60,7 +63,8 @@ function loadState() {
       results: {},
       seasonPredictions: {},
       players: [...DEFAULT_PLAYERS],
-      activePlayer: DEFAULT_PLAYERS[0]
+      activePlayer: DEFAULT_PLAYERS[0],
+      lockedProfile: null
     };
   }
 }
@@ -88,6 +92,13 @@ function totalScore(player) {
 const playerSelect = document.getElementById("playerSelect");
 const newPlayerInput = document.getElementById("newPlayerInput");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
+const profileChoiceSection = document.getElementById("profileChoiceSection");
+const profileChoiceList = document.getElementById("profileChoiceList");
+const mainContent = document.getElementById("mainContent");
+const headerWhenLocked = document.getElementById("headerWhenLocked");
+const headerWhenUnlocked = document.getElementById("headerWhenUnlocked");
+const lockedProfileName = document.getElementById("lockedProfileName");
+const unlockProfileBtn = document.getElementById("unlockProfileBtn");
 const removePlayerBtn = document.getElementById("removePlayerBtn");
 const raceListEl = document.getElementById("raceList");
 const seasonPredictionsEl = document.getElementById("seasonPredictionsEl");
@@ -96,6 +107,56 @@ const seasonProfileLabel = document.getElementById("seasonProfileLabel");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 
+function updateVisibility() {
+  const locked = !!state.lockedProfile;
+  if (profileChoiceSection) profileChoiceSection.style.display = locked ? "none" : "block";
+  if (mainContent) mainContent.style.display = locked ? "grid" : "none";
+  if (headerWhenLocked) headerWhenLocked.style.display = locked ? "flex" : "none";
+  if (headerWhenUnlocked) headerWhenUnlocked.style.display = locked ? "none" : "block";
+  if (locked && lockedProfileName) lockedProfileName.textContent = state.lockedProfile;
+}
+
+function renderProfileChoice() {
+  if (!profileChoiceList) return;
+  profileChoiceList.innerHTML = "";
+  state.players.forEach((name) => {
+    const wrap = document.createElement("div");
+    wrap.className = "profile-choice-item";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-its-me";
+    btn.textContent = "C'est moi (" + name + ")";
+    btn.addEventListener("click", () => {
+      state.lockedProfile = name;
+      state.activePlayer = name;
+      saveState();
+      refreshPlayerSelectUI();
+      updateVisibility();
+      renderAll();
+    });
+    wrap.appendChild(btn);
+    if (state.players.length > 1) {
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn-remove-profile";
+      delBtn.textContent = "Supprimer";
+      delBtn.title = "Supprimer ce profil";
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        state.players = state.players.filter((p) => p !== name);
+        Object.keys(state.predictions).forEach((raceId) => delete state.predictions[raceId][name]);
+        delete state.seasonPredictions[name];
+        if (state.lockedProfile === name) state.lockedProfile = null;
+        if (state.activePlayer === name) state.activePlayer = state.players[0];
+        saveState();
+        renderProfileChoice();
+      });
+      wrap.appendChild(delBtn);
+    }
+    profileChoiceList.appendChild(wrap);
+  });
+}
+
 function updateProfileLabels() {
   const name = playerSelect.value || "";
   if (calendarProfileLabel) calendarProfileLabel.textContent = name ? `Prédictions pour : ${name}` : "";
@@ -103,6 +164,7 @@ function updateProfileLabels() {
 }
 
 function refreshPlayerSelectUI() {
+  if (!playerSelect) return;
   playerSelect.innerHTML = "";
   state.players.forEach((p) => {
     const opt = document.createElement("option");
@@ -110,10 +172,8 @@ function refreshPlayerSelectUI() {
     opt.textContent = p;
     playerSelect.appendChild(opt);
   });
-  playerSelect.value = state.activePlayer || state.players[0];
-  if (removePlayerBtn) {
-    removePlayerBtn.disabled = state.players.length <= 1;
-  }
+  playerSelect.value = state.lockedProfile || state.activePlayer || state.players[0];
+  if (removePlayerBtn) removePlayerBtn.disabled = state.players.length <= 1;
 }
 
 function removeCurrentPlayer() {
@@ -124,25 +184,36 @@ function removeCurrentPlayer() {
     delete state.predictions[raceId][toRemove];
   });
   delete state.seasonPredictions[toRemove];
-  if (state.activePlayer === toRemove) {
-    state.activePlayer = state.players[0];
-  }
+  if (state.lockedProfile === toRemove) state.lockedProfile = null;
+  if (state.activePlayer === toRemove) state.activePlayer = state.players[0];
   saveState();
   refreshPlayerSelectUI();
-  renderAll();
+  updateVisibility();
+  if (state.lockedProfile) renderAll();
+  else renderProfileChoice();
 }
 
 function initPlayerSelect() {
   refreshPlayerSelectUI();
 
-  playerSelect.addEventListener("change", () => {
-    state.activePlayer = playerSelect.value;
-    saveState();
-    renderAll();
-  });
+  if (playerSelect) {
+    playerSelect.addEventListener("change", () => {
+      if (state.lockedProfile) return;
+      state.activePlayer = playerSelect.value;
+      saveState();
+      renderAll();
+    });
+  }
 
-  if (removePlayerBtn) {
-    removePlayerBtn.addEventListener("click", removeCurrentPlayer);
+  if (removePlayerBtn) removePlayerBtn.addEventListener("click", removeCurrentPlayer);
+
+  if (unlockProfileBtn) {
+    unlockProfileBtn.addEventListener("click", () => {
+      state.lockedProfile = null;
+      saveState();
+      updateVisibility();
+      renderProfileChoice();
+    });
   }
 
   if (addPlayerBtn && newPlayerInput) {
@@ -154,7 +225,7 @@ function initPlayerSelect() {
         state.activePlayer = name;
         saveState();
         refreshPlayerSelectUI();
-        renderAll();
+        renderProfileChoice();
         newPlayerInput.value = "";
         return;
       }
@@ -162,14 +233,12 @@ function initPlayerSelect() {
       state.activePlayer = name;
       saveState();
       refreshPlayerSelectUI();
-      renderAll();
+      renderProfileChoice();
       newPlayerInput.value = "";
     });
 
     newPlayerInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        addPlayerBtn.click();
-      }
+      if (e.key === "Enter") addPlayerBtn.click();
     });
   }
 }
@@ -478,9 +547,15 @@ function renderAll() {
 }
 
 initPlayerSelect();
-updateProfileLabels();
-renderRaces();
-renderSeasonPredictions();
-renderAdminResults();
-renderLeaderboard();
+updateVisibility();
+if (state.lockedProfile) {
+  refreshPlayerSelectUI();
+  updateProfileLabels();
+  renderRaces();
+  renderSeasonPredictions();
+  renderAdminResults();
+  renderLeaderboard();
+} else {
+  renderProfileChoice();
+}
 

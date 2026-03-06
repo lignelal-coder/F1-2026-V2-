@@ -9,20 +9,27 @@
   <body>
     <header class="header">
       <div class="logo">F1 2026 • Prédictions</div>
-      <div class="players-select">
-        <div class="players-select-current">
-          <label for="playerSelect">Participant :</label>
-          <select id="playerSelect"></select>
-          <button id="removePlayerBtn" type="button" title="Supprimer ce profil">Supprimer</button>
-        </div>
-        <div class="players-select-new">
-          <input id="newPlayerInput" type="text" placeholder="Nouveau joueur (ex: Lucas)" />
-          <button id="addPlayerBtn" type="button">Ajouter</button>
-        </div>
+      <div id="headerWhenLocked" class="header-locked" style="display: none;">
+        <span class="header-connected">Connecté : <strong id="lockedProfileName"></strong></span>
+        <button id="unlockProfileBtn" type="button">Changer de participant</button>
+      </div>
+      <div id="headerWhenUnlocked" class="players-select">
+        <p class="header-hint">Choisis ton profil ci-dessous pour accéder à tes prédictions.</p>
       </div>
     </header>
 
-    <main class="layout">
+    <section id="profileChoiceSection" class="card profile-choice">
+      <h2>Qui es-tu ?</h2>
+      <p class="hint">Chaque participant ne peut modifier que ses propres prédictions. Choisis ton profil pour continuer.</p>
+      <div id="profileChoiceList" class="profile-choice-list"></div>
+      <div class="players-select-new">
+        <input id="newPlayerInput" type="text" placeholder="Nouveau joueur (ex: Lucas)" />
+        <button id="addPlayerBtn" type="button">Ajouter</button>
+      </div>
+    </section>
+
+    <main id="mainContent" class="layout" style="display: none;">
+      <select id="playerSelect" aria-hidden="true" class="sr-only"></select>
       <section class="card">
         <h2>Calendrier & Prédictions</h2>
         <p class="profile-label" id="calendarProfileLabel" aria-live="polite"></p>

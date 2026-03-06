@@ -40,6 +40,100 @@ body {
   font-size: 14px;
 }
 
+.header-locked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-connected {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.header-connected strong {
+  color: var(--text);
+}
+
+.header-locked #unlockProfileBtn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.header-locked #unlockProfileBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.header-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.profile-choice {
+  margin: 18px 22px 24px;
+  max-width: 480px;
+}
+
+.profile-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.profile-choice-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-its-me {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-its-me:hover {
+  background: #ff291f;
+}
+
+.btn-remove-profile {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.btn-remove-profile:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .players-select label {
   margin-right: 8px;
   font-size: 14px;
