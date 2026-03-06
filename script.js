@@ -1,5 +1,35 @@
 const DEFAULT_PLAYERS = ["Allan", "Alexandre", "Mathéo"];
 
+// Essai calendrier 2025 (passer à 2026 pour la saison réelle)
+const SEASON_YEAR = 2025;
+
+const RACES_2025 = [
+  { id: "aus", name: "GP d'Australie", date: "2025-03-16" },
+  { id: "chn", name: "GP de Chine", date: "2025-03-23" },
+  { id: "jpn", name: "GP du Japon", date: "2025-04-06" },
+  { id: "bah", name: "GP de Bahreïn", date: "2025-04-13" },
+  { id: "sau", name: "GP d'Arabie Saoudite", date: "2025-04-20" },
+  { id: "mia", name: "GP de Miami", date: "2025-05-04" },
+  { id: "imo", name: "GP d'Émilie-Romagne (Imola)", date: "2025-05-18" },
+  { id: "mon", name: "GP de Monaco", date: "2025-05-25" },
+  { id: "esp-bar", name: "GP d'Espagne (Barcelone)", date: "2025-06-01" },
+  { id: "can", name: "GP du Canada", date: "2025-06-15" },
+  { id: "aut", name: "GP d'Autriche", date: "2025-06-29" },
+  { id: "gbr", name: "GP de Grande-Bretagne", date: "2025-07-06" },
+  { id: "bel", name: "GP de Belgique", date: "2025-07-27" },
+  { id: "hun", name: "GP de Hongrie", date: "2025-08-03" },
+  { id: "ned", name: "GP des Pays-Bas", date: "2025-08-31" },
+  { id: "ita", name: "GP d'Italie", date: "2025-09-07" },
+  { id: "aze", name: "GP d'Azerbaïdjan", date: "2025-09-21" },
+  { id: "sin", name: "GP de Singapour", date: "2025-10-05" },
+  { id: "usa-aus", name: "GP des États-Unis (Austin)", date: "2025-10-19" },
+  { id: "mex", name: "GP du Mexique", date: "2025-10-26" },
+  { id: "bra", name: "GP du Brésil (São Paulo)", date: "2025-11-09" },
+  { id: "usa-veg", name: "GP de Las Vegas", date: "2025-11-22" },
+  { id: "qat", name: "GP du Qatar", date: "2025-11-30" },
+  { id: "abu", name: "GP d'Abou Dhabi", date: "2025-12-07" }
+];
+
 const RACES_2026 = [
   { id: "aus", name: "GP d'Australie", date: "2026-03-08" },
   { id: "chn", name: "GP de Chine", date: "2026-03-16" },
@@ -27,13 +57,17 @@ const RACES_2026 = [
   { id: "abu", name: "GP d'Abou Dhabi", date: "2026-12-06" }
 ];
 
-const STORAGE_KEY = "f1-2026-predictions-v1";
+const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
+
+function getStorageKey() {
+  return "f1-" + SEASON_YEAR + "-predictions-v1";
+}
 
 let state = loadState();
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey());
     if (!raw) {
       return {
         predictions: {},
@@ -70,7 +104,7 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(getStorageKey(), JSON.stringify(state));
 }
 
 function scoreRaceForPlayer(raceId, player) {
@@ -86,7 +120,7 @@ function scoreRaceForPlayer(raceId, player) {
 }
 
 function totalScore(player) {
-  return RACES_2026.reduce((sum, race) => sum + scoreRaceForPlayer(race.id, player), 0);
+  return RACES.reduce((sum, race) => sum + scoreRaceForPlayer(race.id, player), 0);
 }
 
 const playerSelect = document.getElementById("playerSelect");
@@ -106,6 +140,13 @@ const calendarProfileLabel = document.getElementById("calendarProfileLabel");
 const seasonProfileLabel = document.getElementById("seasonProfileLabel");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
+const seasonYearBadge = document.getElementById("seasonYearBadge");
+
+function updateSeasonYearBadge() {
+  if (seasonYearBadge) {
+    seasonYearBadge.textContent = "Saison " + SEASON_YEAR + (SEASON_YEAR === 2025 ? " (essai)" : "");
+  }
+}
 
 function updateVisibility() {
   const locked = !!state.lockedProfile;
@@ -316,7 +357,7 @@ function createRaceCard(race) {
 
 function renderRaces() {
   raceListEl.innerHTML = "";
-  RACES_2026.forEach((race) => {
+  RACES.forEach((race) => {
     const card = createRaceCard(race);
     raceListEl.appendChild(card);
   });
@@ -423,23 +464,23 @@ function renderResultsComparison(race, wrap) {
 function renderAdminResults() {
   resultsAdminEl.innerHTML = "";
 
-  const year = 2026;
+  const year = SEASON_YEAR;
   const topBar = document.createElement("div");
   topBar.className = "results-admin-topbar";
   const btnFetchAll = document.createElement("button");
   btnFetchAll.type = "button";
   btnFetchAll.className = "btn-fetch-all";
-  btnFetchAll.textContent = "Récupérer tous les résultats (API)";
+  btnFetchAll.textContent = "Récupérer tous les résultats (API " + year + ")";
   btnFetchAll.title = "Remplir toutes les courses avec l’API Ergast (année " + year + ")";
   btnFetchAll.addEventListener("click", async () => {
     btnFetchAll.disabled = true;
     btnFetchAll.textContent = "Récupération…";
     let filled = 0;
-    for (let r = 0; r < RACES_2026.length; r++) {
+    for (let r = 0; r < RACES.length; r++) {
       try {
         const top3 = await fetchRaceResultsFromAPI(r + 1, year);
         if (top3 && top3.length >= 3) {
-          state.results[RACES_2026[r].id] = top3;
+          state.results[RACES[r].id] = top3;
           filled++;
         }
       } catch (_) {}
@@ -453,7 +494,7 @@ function renderAdminResults() {
   topBar.appendChild(btnFetchAll);
   resultsAdminEl.appendChild(topBar);
 
-  RACES_2026.forEach((race, index) => {
+  RACES.forEach((race, index) => {
     const round = index + 1;
     const wrap = document.createElement("div");
     wrap.className = "race";
@@ -622,6 +663,7 @@ function renderAll() {
 }
 
 initPlayerSelect();
+updateSeasonYearBadge();
 updateVisibility();
 if (state.lockedProfile) {
   refreshPlayerSelectUI();
