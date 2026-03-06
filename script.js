@@ -91,8 +91,16 @@ const addPlayerBtn = document.getElementById("addPlayerBtn");
 const removePlayerBtn = document.getElementById("removePlayerBtn");
 const raceListEl = document.getElementById("raceList");
 const seasonPredictionsEl = document.getElementById("seasonPredictionsEl");
+const calendarProfileLabel = document.getElementById("calendarProfileLabel");
+const seasonProfileLabel = document.getElementById("seasonProfileLabel");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
+
+function updateProfileLabels() {
+  const name = playerSelect.value || "";
+  if (calendarProfileLabel) calendarProfileLabel.textContent = name ? `Prédictions pour : ${name}` : "";
+  if (seasonProfileLabel) seasonProfileLabel.textContent = name ? `Prédictions pour : ${name}` : "";
+}
 
 function refreshPlayerSelectUI() {
   playerSelect.innerHTML = "";
@@ -389,21 +397,24 @@ function renderSeasonPredictions() {
   btn.className = "season-save-btn";
   btn.textContent = "Sauvegarder les prédictions fin de saison";
   btn.addEventListener("click", () => {
+    const currentPlayer = playerSelect.value;
     const d = driverInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
     const c = constructorInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
-    state.seasonPredictions[player] = { drivers: d, constructors: c };
+    state.seasonPredictions[currentPlayer] = { drivers: d, constructors: c };
     saveState();
   });
   seasonPredictionsEl.appendChild(btn);
 }
 
 function renderAll() {
+  updateProfileLabels();
   fillExistingPredictionsAndScores();
   renderSeasonPredictions();
   renderLeaderboard();
 }
 
 initPlayerSelect();
+updateProfileLabels();
 renderRaces();
 renderSeasonPredictions();
 renderAdminResults();
