@@ -46,6 +46,40 @@ body {
   color: var(--muted);
 }
 
+.players-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.players-select-new {
+  display: flex;
+  gap: 6px;
+}
+
+.players-select-new input {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  background: #050308;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.players-select-new button {
+  border-radius: 999px;
+  border: none;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+.players-select-new button:hover {
+  background: #ff291f;
+}
+
 select {
   background: #050308;
   border-radius: 999px;

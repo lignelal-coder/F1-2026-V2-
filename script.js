@@ -1,4 +1,4 @@
-const PLAYERS = ["Alan", "Alexandre", "Mathéo"];
+const DEFAULT_PLAYERS = ["Alan", "Alexandre", "Mathéo"];
 
 const RACES_2026 = [
   { id: "bah", name: "GP de Bahreïn", date: "2026-03-08" },
@@ -35,16 +35,30 @@ function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { predictions: {}, results: {} };
+      return {
+        predictions: {},
+        results: {},
+        players: [...DEFAULT_PLAYERS],
+        activePlayer: DEFAULT_PLAYERS[0]
+      };
     }
     const parsed = JSON.parse(raw);
+    const players = Array.isArray(parsed.players) && parsed.players.length ? parsed.players : [...DEFAULT_PLAYERS];
+    const activePlayer = parsed.activePlayer && players.includes(parsed.activePlayer) ? parsed.activePlayer : players[0];
     return {
       predictions: parsed.predictions || {},
-      results: parsed.results || {}
+      results: parsed.results || {},
+      players,
+      activePlayer
     };
   } catch (e) {
     console.error("Erreur de chargement du state", e);
-    return { predictions: {}, results: {} };
+    return {
+      predictions: {},
+      results: {},
+      players: [...DEFAULT_PLAYERS],
+      activePlayer: DEFAULT_PLAYERS[0]
+    };
   }
 }
 
@@ -69,19 +83,59 @@ function totalScore(player) {
 }
 
 const playerSelect = document.getElementById("playerSelect");
+const newPlayerInput = document.getElementById("newPlayerInput");
+const addPlayerBtn = document.getElementById("addPlayerBtn");
 const raceListEl = document.getElementById("raceList");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 
 function initPlayerSelect() {
-  PLAYERS.forEach((p) => {
-    const opt = document.createElement("option");
-    opt.value = p;
-    opt.textContent = p;
-    playerSelect.appendChild(opt);
+  function refreshOptions() {
+    playerSelect.innerHTML = "";
+    state.players.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      playerSelect.appendChild(opt);
+    });
+    playerSelect.value = state.activePlayer || state.players[0];
+  }
+
+  refreshOptions();
+
+  playerSelect.addEventListener("change", () => {
+    state.activePlayer = playerSelect.value;
+    saveState();
+    renderAll();
   });
-  playerSelect.value = PLAYERS[0];
-  playerSelect.addEventListener("change", renderAll);
+
+  if (addPlayerBtn && newPlayerInput) {
+    addPlayerBtn.addEventListener("click", () => {
+      const raw = newPlayerInput.value.trim();
+      if (!raw) return;
+      const name = raw;
+      if (state.players.includes(name)) {
+        state.activePlayer = name;
+        saveState();
+        refreshOptions();
+        renderAll();
+        newPlayerInput.value = "";
+        return;
+      }
+      state.players.push(name);
+      state.activePlayer = name;
+      saveState();
+      refreshOptions();
+      renderAll();
+      newPlayerInput.value = "";
+    });
+
+    newPlayerInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        addPlayerBtn.click();
+      }
+    });
+  }
 }
 
 function createRaceCard(race) {
@@ -185,7 +239,7 @@ function fillExistingPredictionsAndScores() {
 }
 
 function renderLeaderboard() {
-  const rows = PLAYERS.map((p) => ({
+  const rows = state.players.map((p) => ({
     player: p,
     score: totalScore(p)
   })).sort((a, b) => b.score - a.score);
