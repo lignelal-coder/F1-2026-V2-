@@ -38,6 +38,7 @@ function loadState() {
       return {
         predictions: {},
         results: {},
+        seasonPredictions: {},
         players: [...DEFAULT_PLAYERS],
         activePlayer: DEFAULT_PLAYERS[0]
       };
@@ -48,6 +49,7 @@ function loadState() {
     return {
       predictions: parsed.predictions || {},
       results: parsed.results || {},
+      seasonPredictions: parsed.seasonPredictions || {},
       players,
       activePlayer
     };
@@ -56,6 +58,7 @@ function loadState() {
     return {
       predictions: {},
       results: {},
+      seasonPredictions: {},
       players: [...DEFAULT_PLAYERS],
       activePlayer: DEFAULT_PLAYERS[0]
     };
@@ -87,6 +90,7 @@ const newPlayerInput = document.getElementById("newPlayerInput");
 const addPlayerBtn = document.getElementById("addPlayerBtn");
 const removePlayerBtn = document.getElementById("removePlayerBtn");
 const raceListEl = document.getElementById("raceList");
+const seasonPredictionsEl = document.getElementById("seasonPredictionsEl");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 
@@ -111,6 +115,7 @@ function removeCurrentPlayer() {
   Object.keys(state.predictions).forEach((raceId) => {
     delete state.predictions[raceId][toRemove];
   });
+  delete state.seasonPredictions[toRemove];
   if (state.activePlayer === toRemove) {
     state.activePlayer = state.players[0];
   }
@@ -340,13 +345,67 @@ function renderAdminResults() {
   });
 }
 
+function renderSeasonPredictions() {
+  if (!seasonPredictionsEl) return;
+  const player = playerSelect.value;
+  const data = state.seasonPredictions[player] || { drivers: ["", "", ""], constructors: ["", "", ""] };
+  const drivers = Array.isArray(data.drivers) ? data.drivers : ["", "", ""];
+  const constructors = Array.isArray(data.constructors) ? data.constructors : ["", "", ""];
+
+  seasonPredictionsEl.innerHTML = "";
+
+  const block = (title, labels, values, key) => {
+    const wrap = document.createElement("div");
+    wrap.className = "season-block";
+    const h = document.createElement("h3");
+    h.className = "season-block-title";
+    h.textContent = title;
+    wrap.appendChild(h);
+    const form = document.createElement("div");
+    form.className = "season-form";
+    const inputs = [];
+    labels.forEach((label, idx) => {
+      const group = document.createElement("div");
+      const l = document.createElement("label");
+      l.textContent = label;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = label;
+      input.value = values[idx] || "";
+      group.appendChild(l);
+      group.appendChild(input);
+      form.appendChild(group);
+      inputs.push(input);
+    });
+    wrap.appendChild(form);
+    seasonPredictionsEl.appendChild(wrap);
+    return inputs;
+  };
+
+  const driverInputs = block("Championnat pilotes (top 3)", ["1er", "2e", "3e"], drivers, "drivers");
+  const constructorInputs = block("Championnat constructeurs (top 3)", ["1er", "2e", "3e"], constructors, "constructors");
+
+  const btn = document.createElement("button");
+  btn.className = "season-save-btn";
+  btn.textContent = "Sauvegarder les prédictions fin de saison";
+  btn.addEventListener("click", () => {
+    const d = driverInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    const c = constructorInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    state.seasonPredictions[player] = { drivers: d, constructors: c };
+    saveState();
+  });
+  seasonPredictionsEl.appendChild(btn);
+}
+
 function renderAll() {
   fillExistingPredictionsAndScores();
+  renderSeasonPredictions();
   renderLeaderboard();
 }
 
 initPlayerSelect();
 renderRaces();
+renderSeasonPredictions();
 renderAdminResults();
 renderLeaderboard();
 

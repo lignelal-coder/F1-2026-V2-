@@ -120,9 +120,15 @@ select {
 
 .layout {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 1.3fr;
+  grid-template-columns: 2fr 1.2fr 1.4fr 1.3fr;
   gap: 16px;
   padding: 18px 22px 24px;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 960px) {
@@ -148,6 +154,57 @@ select {
   margin-top: 0;
   font-size: 13px;
   color: var(--muted);
+}
+
+.season-block {
+  margin-bottom: 14px;
+}
+
+.season-block-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.season-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.season-form label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.season-form input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  font-size: 13px;
+  background: #050308;
+  color: var(--text);
+}
+
+.season-save-btn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.season-save-btn:hover {
+  background: #ff291f;
 }
 
 .race-list {
