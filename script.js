@@ -3,7 +3,28 @@ const PLAYERS = ["Alan", "Alexandre", "Mathéo"];
 const RACES_2026 = [
   { id: "bah", name: "GP de Bahreïn", date: "2026-03-08" },
   { id: "sau", name: "GP d'Arabie Saoudite", date: "2026-03-22" },
-  { id: "aus", name: "GP d'Australie", date: "2026-04-05" }
+  { id: "aus", name: "GP d'Australie", date: "2026-04-05" },
+  { id: "chn", name: "GP de Chine", date: "2026-04-19" },
+  { id: "mia", name: "GP de Miami", date: "2026-05-03" },
+  { id: "imo", name: "GP d'Émilie-Romagne (Imola)", date: "2026-05-17" },
+  { id: "mon", name: "GP de Monaco", date: "2026-05-24" },
+  { id: "esp-bar", name: "GP d'Espagne (Barcelone)", date: "2026-06-07" },
+  { id: "can", name: "GP du Canada", date: "2026-06-14" },
+  { id: "aut", name: "GP d'Autriche", date: "2026-06-28" },
+  { id: "gbr", name: "GP de Grande-Bretagne", date: "2026-07-05" },
+  { id: "hun", name: "GP de Hongrie", date: "2026-07-19" },
+  { id: "bel", name: "GP de Belgique", date: "2026-08-02" },
+  { id: "ned", name: "GP des Pays-Bas", date: "2026-08-30" },
+  { id: "ita", name: "GP d'Italie (Monza)", date: "2026-09-06" },
+  { id: "aze", name: "GP d'Azerbaïdjan", date: "2026-09-20" },
+  { id: "sin", name: "GP de Singapour", date: "2026-10-04" },
+  { id: "usa-aus", name: "GP des États-Unis (Austin)", date: "2026-10-18" },
+  { id: "mex", name: "GP du Mexique", date: "2026-11-01" },
+  { id: "bra", name: "GP du Brésil (São Paulo)", date: "2026-11-08" },
+  { id: "usa-veg", name: "GP de Las Vegas", date: "2026-11-21" },
+  { id: "qat", name: "GP du Qatar", date: "2026-11-29" },
+  { id: "abu", name: "GP d'Abou Dhabi", date: "2026-12-06" },
+  { id: "esp-mad", name: "GP d'Espagne (Madrid)", date: "2026-07-26" } // date indicative en attendant confirmation
 ];
 
 const STORAGE_KEY = "f1-2026-predictions-v1";
