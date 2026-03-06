@@ -1,7 +1,7 @@
 const DEFAULT_PLAYERS = ["Allan", "Alexandre", "Mathéo"];
 
-// Essai calendrier 2025 (passer à 2026 pour la saison réelle)
-const SEASON_YEAR = 2025;
+// Calendrier affiché : 2026 (prédictions saison 2026)
+const SEASON_YEAR = 2026;
 
 const RACES_2025 = [
   { id: "aus", name: "GP d'Australie", date: "2025-03-16" },
@@ -31,30 +31,30 @@ const RACES_2025 = [
 ];
 
 const RACES_2026 = [
-  { id: "aus", name: "GP d'Australie", date: "2026-03-08" },
-  { id: "chn", name: "GP de Chine", date: "2026-03-16" },
-  { id: "jpn", name: "GP du Japon", date: "2026-03-30" },
-  { id: "bah", name: "GP de Bahreïn", date: "2026-04-13" },
-  { id: "sau", name: "GP d'Arabie Saoudite", date: "2026-04-20" },
-  { id: "mia", name: "GP de Miami", date: "2026-05-03" },
-  { id: "can", name: "GP du Canada", date: "2026-05-24" },
-  { id: "mon", name: "GP de Monaco", date: "2026-06-07" },
-  { id: "esp-bar", name: "GP d'Espagne (Barcelone)", date: "2026-06-14" },
-  { id: "aut", name: "GP d'Autriche", date: "2026-06-28" },
-  { id: "gbr", name: "GP de Grande-Bretagne", date: "2026-07-05" },
-  { id: "bel", name: "GP de Belgique", date: "2026-07-19" },
-  { id: "hun", name: "GP de Hongrie", date: "2026-07-26" },
-  { id: "ned", name: "GP des Pays-Bas", date: "2026-08-23" },
-  { id: "ita", name: "GP d'Italie", date: "2026-09-06" },
-  { id: "esp-mad", name: "GP d'Espagne (Madrid)", date: "2026-09-13" },
-  { id: "aze", name: "GP d'Azerbaïdjan", date: "2026-09-27" },
-  { id: "sin", name: "GP de Singapour", date: "2026-10-11" },
-  { id: "usa-aus", name: "GP des États-Unis (Austin)", date: "2026-10-25" },
-  { id: "mex", name: "GP du Mexique", date: "2026-11-01" },
-  { id: "bra", name: "GP du Brésil (São Paulo)", date: "2026-11-08" },
-  { id: "usa-veg", name: "GP de Las Vegas", date: "2026-11-21" },
-  { id: "qat", name: "GP du Qatar", date: "2026-11-29" },
-  { id: "abu", name: "GP d'Abou Dhabi", date: "2026-12-06" }
+  { id: "aus", name: "Australie (Melbourne)", date: "2026-03-08", sprint: false },
+  { id: "chn", name: "Chine (Shanghai)", date: "2026-03-16", sprint: true },
+  { id: "jpn", name: "Japon (Suzuka)", date: "2026-03-30", sprint: false },
+  { id: "bah", name: "Bahreïn (Sakhir)", date: "2026-04-13", sprint: false },
+  { id: "sau", name: "Arabie Saoudite (Djeddah)", date: "2026-04-20", sprint: false },
+  { id: "mia", name: "Miami", date: "2026-05-03", sprint: true },
+  { id: "can", name: "Canada (Montréal)", date: "2026-05-24", sprint: true },
+  { id: "mon", name: "Monaco", date: "2026-06-07", sprint: false },
+  { id: "esp-bar", name: "Espagne (Barcelone)", date: "2026-06-14", sprint: false },
+  { id: "aut", name: "Autriche (Spielberg)", date: "2026-06-28", sprint: false },
+  { id: "gbr", name: "Grande-Bretagne (Silverstone)", date: "2026-07-05", sprint: true },
+  { id: "bel", name: "Belgique (Spa)", date: "2026-07-19", sprint: false },
+  { id: "hun", name: "Hongrie (Budapest)", date: "2026-07-26", sprint: false },
+  { id: "ned", name: "Pays-Bas (Zandvoort)", date: "2026-08-23", sprint: true },
+  { id: "ita", name: "Italie (Monza)", date: "2026-09-06", sprint: false },
+  { id: "esp-mad", name: "Espagne (Madrid)", date: "2026-09-13", sprint: false },
+  { id: "aze", name: "Azerbaïdjan (Bakou) — course samedi", date: "2026-09-26", sprint: false },
+  { id: "sin", name: "Singapour", date: "2026-10-11", sprint: true },
+  { id: "usa-aus", name: "États-Unis (Austin)", date: "2026-10-25", sprint: false },
+  { id: "mex", name: "Mexique (Mexico)", date: "2026-11-01", sprint: false },
+  { id: "bra", name: "Brésil (São Paulo)", date: "2026-11-08", sprint: false },
+  { id: "usa-veg", name: "Las Vegas", date: "2026-11-21", sprint: false },
+  { id: "qat", name: "Qatar (Losail)", date: "2026-11-29", sprint: false },
+  { id: "abu", name: "Abou Dhabi (Yas Marina)", date: "2026-12-06", sprint: false }
 ];
 
 const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
@@ -297,11 +297,19 @@ function createRaceCard(race) {
 
   const meta = document.createElement("div");
   meta.className = "race-meta";
-  meta.textContent = new Date(race.date).toLocaleDateString("fr-FR", {
+  const dateStr = new Date(race.date).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "short",
     year: "numeric"
   });
+  meta.textContent = dateStr;
+  if (race.sprint) {
+    const sprintTag = document.createElement("span");
+    sprintTag.className = "race-sprint-tag";
+    sprintTag.textContent = "Sprint";
+    meta.appendChild(document.createTextNode(" · "));
+    meta.appendChild(sprintTag);
+  }
 
   header.appendChild(title);
   header.appendChild(meta);
@@ -549,6 +557,13 @@ function renderAdminResults() {
     const name = document.createElement("div");
     name.className = "race-name";
     name.textContent = race.name;
+    if (race.sprint) {
+      name.appendChild(document.createTextNode(" "));
+      const sprintTag = document.createElement("span");
+      sprintTag.className = "race-sprint-tag";
+      sprintTag.textContent = "Sprint";
+      name.appendChild(sprintTag);
+    }
 
     const meta = document.createElement("div");
     meta.className = "race-meta";

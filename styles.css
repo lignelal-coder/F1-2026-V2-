@@ -441,6 +441,18 @@ select {
   color: var(--muted);
 }
 
+.race-sprint-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .race-form {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
