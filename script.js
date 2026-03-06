@@ -326,15 +326,18 @@ function createRaceCard(race) {
   });
 
   const btn = document.createElement("button");
+  btn.type = "button";
   btn.textContent = "Sauvegarder";
 
   btn.addEventListener("click", () => {
     const player = playerSelect.value;
     const racePreds = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    if (!racePreds[0] && !racePreds[1] && !racePreds[2]) return;
 
     if (!state.predictions[race.id]) state.predictions[race.id] = {};
     state.predictions[race.id][player] = racePreds;
     saveState();
+    setRaceCardLocked(wrapper, true);
     renderLeaderboard();
   });
 
@@ -350,9 +353,21 @@ function createRaceCard(race) {
 
   wrapper._pointsTag = tag;
   wrapper._inputs = inputs;
+  wrapper._saveBtn = btn;
   wrapper._raceId = race.id;
 
   return wrapper;
+}
+
+function setRaceCardLocked(cardEl, locked) {
+  if (!cardEl._inputs || !cardEl._saveBtn) return;
+  cardEl._inputs.forEach((input) => {
+    input.disabled = locked;
+    input.readOnly = locked;
+  });
+  cardEl._saveBtn.disabled = locked;
+  cardEl._saveBtn.textContent = locked ? "Enregistré" : "Sauvegarder";
+  cardEl.classList.toggle("race-locked", locked);
 }
 
 function renderRaces() {
@@ -379,6 +394,9 @@ function fillExistingPredictionsAndScores() {
       });
     }
 
+    const isLocked = preds && (preds[0] || preds[1] || preds[2]);
+    setRaceCardLocked(el, !!isLocked);
+
     const pts = scoreRaceForPlayer(raceId, player);
     tag.textContent = `Points actuels : ${pts}`;
   });
@@ -402,23 +420,50 @@ function renderLeaderboard() {
 
 function fetchRaceResultsFromAPI(round, year) {
   const url = `https://ergast.com/api/f1/${year}/${round}/results.json`;
-  return fetch(url)
+
+  function parseResponse(data) {
+    const races = data?.MRData?.RaceTable?.Races;
+    if (!races || races.length === 0) return null;
+    const results = races[0].Results;
+    if (!results || results.length < 3) return null;
+    const top3 = results
+      .sort((a, b) => parseInt(a.position, 10) - parseInt(b.position, 10))
+      .slice(0, 3)
+      .map((r) => (r.Driver && r.Driver.code) || "");
+    return top3;
+  }
+
+  const proxies = [
+    "https://corsproxy.io/?url=" + encodeURIComponent(url),
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(url)
+  ];
+
+  function tryFetch(i) {
+    if (i >= proxies.length) return Promise.reject(new Error("API indisponible"));
+    return fetch(proxies[i], { mode: "cors" })
+      .then((r) => {
+        if (!r.ok) throw new Error("Réseau");
+        return r.text();
+      })
+      .then((text) => {
+        try {
+          const data = JSON.parse(text);
+          const top3 = parseResponse(data);
+          if (top3) return top3;
+        } catch (_) {}
+        throw new Error("Aucun résultat");
+      })
+      .catch(() => tryFetch(i + 1));
+  }
+
+  return fetch(url, { mode: "cors" })
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Réseau"))))
-    .catch(() => {
-      const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-      return fetch(proxyUrl).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Indisponible"))));
-    })
     .then((data) => {
-      const races = data?.MRData?.RaceTable?.Races;
-      if (!races || races.length === 0) return null;
-      const results = races[0].Results;
-      if (!results || results.length < 3) return null;
-      const top3 = results
-        .sort((a, b) => parseInt(a.position, 10) - parseInt(b.position, 10))
-        .slice(0, 3)
-        .map((r) => (r.Driver && r.Driver.code) || "");
-      return top3;
-    });
+      const top3 = parseResponse(data);
+      if (top3) return top3;
+      throw new Error("Aucun résultat");
+    })
+    .catch(() => tryFetch(0));
 }
 
 function renderResultsComparison(race, wrap) {
@@ -570,11 +615,11 @@ function renderAdminResults() {
           return;
         }
       } catch (e) {
-        btnFetch.textContent = "Erreur";
+        btnFetch.textContent = "API indisponible";
         setTimeout(() => {
           btnFetch.textContent = "Récupérer auto";
           btnFetch.disabled = false;
-        }, 2000);
+        }, 3000);
         return;
       }
       btnFetch.textContent = "Récupérer auto";
@@ -648,9 +693,23 @@ function renderSeasonPredictions() {
     const currentPlayer = playerSelect.value;
     const d = driverInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
     const c = constructorInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    if (!d[0] && !d[1] && !d[2] && !c[0] && !c[1] && !c[2]) return;
     state.seasonPredictions[currentPlayer] = { drivers: d, constructors: c };
     saveState();
+    driverInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
+    constructorInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
+    btn.disabled = true;
+    btn.textContent = "Enregistré";
   });
+
+  const seasonLocked = drivers.some(Boolean) || constructors.some(Boolean);
+  if (seasonLocked) {
+    driverInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
+    constructorInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
+    btn.disabled = true;
+    btn.textContent = "Enregistré";
+  }
+
   seasonPredictionsEl.appendChild(btn);
 }
 

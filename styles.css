@@ -415,6 +415,16 @@ select {
   background: rgba(8, 8, 16, 0.9);
 }
 
+.race.race-locked .race-form input {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.race .race-form button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
 .race-header {
   display: flex;
   justify-content: space-between;
