@@ -17,20 +17,97 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top, #24101a 0, #050308 45%);
+  background: #050308;
   color: var(--text);
+  position: relative;
+  min-height: 100vh;
+}
+
+.f1-visual-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.f1-checkered {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  opacity: 0.06;
+  background-image:
+    linear-gradient(45deg, #fff 25%, transparent 25%),
+    linear-gradient(-45deg, #fff 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #fff 75%),
+    linear-gradient(-45deg, transparent 75%, #fff 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+  background-color: transparent;
+}
+
+.f1-stripes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(225, 6, 0, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 30%, rgba(225, 6, 0, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 45%);
+}
+
+.header,
+.profile-choice,
+.layout,
+.footer {
+  position: relative;
+  z-index: 1;
 }
 
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(to right, #050308, #151520);
+  padding: 14px 22px 0;
+  border-bottom: none;
+  background: linear-gradient(to right, #050308, #0d0d14);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.header-red-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, #e10600 15%, #e10600 85%, transparent 100%);
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.logo-icon {
+  display: inline-flex;
+  width: 32px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.logo-icon svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .logo {
@@ -44,6 +121,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding-bottom: 14px;
 }
 
 .header-connected {
@@ -72,6 +150,7 @@ body {
 
 .header-hint {
   margin: 0;
+  padding-bottom: 14px;
   font-size: 13px;
   color: var(--muted);
 }
@@ -235,6 +314,7 @@ select {
   background: var(--card);
   border-radius: 12px;
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   padding: 16px;
   box-shadow: 0 14px 45px rgba(0, 0, 0, 0.45);
 }
@@ -440,5 +520,10 @@ select {
   font-size: 12px;
   color: var(--muted);
   border-top: 1px solid var(--border);
+}
+
+.footer-f1 {
+  margin-right: 6px;
+  opacity: 0.9;
 }
 

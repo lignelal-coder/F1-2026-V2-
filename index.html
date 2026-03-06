@@ -7,8 +7,23 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="f1-visual-bg" aria-hidden="true">
+      <div class="f1-checkered"></div>
+      <div class="f1-stripes"></div>
+    </div>
     <header class="header">
-      <div class="logo">F1 2026 • Prédictions</div>
+      <div class="logo-wrap">
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 56 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 12h8l3-4h22l4 4h9" stroke="#e10600" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            <circle cx="10" cy="12" r="3.5" stroke="#e10600" stroke-width="1.2" fill="#050308"/>
+            <circle cx="46" cy="12" r="3.5" stroke="#e10600" stroke-width="1.2" fill="#050308"/>
+            <path d="M42 6h6l1 3h-8l1-3z" stroke="#e10600" stroke-width="1" fill="none"/>
+          </svg>
+        </span>
+        <span class="logo">F1 2026 • Prédictions</span>
+      </div>
+      <div class="header-red-bar"></div>
       <div id="headerWhenLocked" class="header-locked" style="display: none;">
         <span class="header-connected">Connecté : <strong id="lockedProfileName"></strong></span>
         <button id="unlockProfileBtn" type="button">Changer de participant</button>
@@ -67,6 +82,7 @@
     </main>
 
     <footer class="footer">
+      <span class="footer-f1">🏎️</span>
       Points : 1er = 5 pts • 2e = 3 pts • 3e = 1 pt — Données stockées en localStorage.
     </footer>
 
