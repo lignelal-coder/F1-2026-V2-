@@ -540,6 +540,7 @@ function renderSeasonPredictions() {
 }
 
 function renderAll() {
+  renderRaces();
   updateProfileLabels();
   fillExistingPredictionsAndScores();
   renderSeasonPredictions();
