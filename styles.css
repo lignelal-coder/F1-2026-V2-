@@ -112,20 +112,20 @@ body {
 .f1-2026-cars-img {
   width: 100%;
   height: auto;
-  max-height: 75vh;
+  max-height: 26vh;
   object-fit: contain;
   border-radius: 8px;
   display: block;
 }
 
 .f1-2026-visual .f1-2026-visual-title:not(:first-child) {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .f1-2026-visual-img {
   width: 100%;
   height: auto;
-  max-height: 60vh;
+  max-height: 24vh;
   object-fit: contain;
   border-radius: 8px;
   display: block;

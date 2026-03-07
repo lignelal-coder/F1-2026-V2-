@@ -104,7 +104,7 @@ const DRIVER_NAMES = {
   RUS: "George Russell", ANT: "Kimi Antonelli", NOR: "Lando Norris", PIA: "Oscar Piastri",
   ALO: "Fernando Alonso", STR: "Lance Stroll", GAS: "Pierre Gasly", COL: "Jack Doohan",
   ALB: "Alex Albon", SAI: "Carlos Sainz", LAW: "Liam Lawson", LIN: "Yuki Tsunoda",
-  HUL: "Nico Hülkenberg", BOR: "Theo Pourchaire", BEA: "Oliver Bearman", OCO: "Esteban Ocon",
+  HUL: "Nico Hülkenberg", BOR: "Rafael Bortoleto", BEA: "Oliver Bearman", OCO: "Esteban Ocon",
   PER: "Sergio Pérez", BOT: "Valtteri Bottas"
 };
 
@@ -226,8 +226,8 @@ function scoreRaceForPlayer(raceId, player) {
   const real = state.results[raceId];
   if (!preds || !real) return 0;
   let pts = 0;
-  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 5;
-  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 3;
+  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 1;
+  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 1;
   if (preds[2] && preds[2].toUpperCase() === real[2]?.toUpperCase()) pts += 1;
   return pts;
 }
@@ -237,8 +237,8 @@ function scoreSprintForPlayer(raceId, player) {
   const real = state.sprintResults[raceId];
   if (!preds || !real) return 0;
   let pts = 0;
-  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 5;
-  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 3;
+  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 1;
+  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 1;
   if (preds[2] && preds[2].toUpperCase() === real[2]?.toUpperCase()) pts += 1;
   return pts;
 }
