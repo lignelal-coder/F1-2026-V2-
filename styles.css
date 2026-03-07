@@ -92,9 +92,12 @@ body {
 
 .f1-2026-visual {
   position: sticky;
-  top: 100px;
+  top: 20px;
+  align-self: start;
   text-align: center;
   padding: 12px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 
 .f1-2026-visual-title {
@@ -870,7 +873,7 @@ select {
 
 .drivers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 1rem;
   justify-items: center;
 }
@@ -880,6 +883,7 @@ select {
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
+  text-align: center;
 }
 
 .drivers-grid-portrait {
@@ -895,6 +899,8 @@ select {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text);
+  max-width: 120px;
+  line-height: 1.2;
 }
 
 .footer {

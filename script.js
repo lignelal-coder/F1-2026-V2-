@@ -98,6 +98,44 @@ const DRIVERS_GRID_ORDER = [
   "HUL", "BOR", "BEA", "OCO", "PER", "BOT"
 ];
 
+// Noms complets des pilotes (code FIA → nom affiché)
+const DRIVER_NAMES = {
+  VER: "Max Verstappen", HAD: "Isaac Hadjar", LEC: "Charles Leclerc", HAM: "Lewis Hamilton",
+  RUS: "George Russell", ANT: "Kimi Antonelli", NOR: "Lando Norris", PIA: "Oscar Piastri",
+  ALO: "Fernando Alonso", STR: "Lance Stroll", GAS: "Pierre Gasly", COL: "Jack Doohan",
+  ALB: "Alex Albon", SAI: "Carlos Sainz", LAW: "Liam Lawson", LIN: "Yuki Tsunoda",
+  HUL: "Nico Hülkenberg", BOR: "Theo Pourchaire", BEA: "Oliver Bearman", OCO: "Esteban Ocon",
+  PER: "Sergio Pérez", BOT: "Valtteri Bottas"
+};
+
+// Écurie de chaque pilote (code FIA → nom écurie affiché)
+const DRIVER_TO_CONSTRUCTOR = {
+  VER: "Red Bull", HAD: "Red Bull", LEC: "Ferrari", HAM: "Ferrari",
+  RUS: "Mercedes", ANT: "Mercedes", NOR: "McLaren", PIA: "McLaren",
+  ALO: "Aston Martin", STR: "Aston Martin", GAS: "Alpine", COL: "Alpine",
+  ALB: "Williams", SAI: "Williams", LAW: "Racing Bulls", LIN: "Racing Bulls",
+  HUL: "Audi", BOR: "Audi", BEA: "Haas", OCO: "Haas", PER: "Cadillac", BOT: "Cadillac"
+};
+
+function getConstructorNameForDriver(code) {
+  const c = (code || "").toUpperCase().trim();
+  return DRIVER_TO_CONSTRUCTOR[c] || null;
+}
+
+function getDriverName(code) {
+  const c = (code || "").toUpperCase().trim();
+  return DRIVER_NAMES[c] || code || "";
+}
+
+/** Met à jour le suffixe du label (code pilote → nom écurie) pour un champ prédiction. */
+function updatePredictionLabelSuffix(input) {
+  const group = input?.closest(".race-prediction-group");
+  const suffix = group?.querySelector(".race-prediction-label-suffix");
+  if (!suffix) return;
+  const team = getConstructorNameForDriver(input.value?.trim());
+  suffix.textContent = team ? "(" + team + ")" : "(code pilote)";
+}
+
 // Icônes écuries (nom ou code → chemin image). Fichiers dans assets/img/teams/
 const CONSTRUCTOR_ICONS = {
   MCLAREN: "assets/img/teams/MCLAREN.png", MERCEDES: "assets/img/teams/MERCEDES.png",
@@ -246,14 +284,15 @@ function renderDriversGrid() {
     const src = getDriverIconSrc(code);
     const item = document.createElement("div");
     item.className = "drivers-grid-item";
-    item.setAttribute("aria-label", "Pilote " + code);
+    const fullName = getDriverName(code);
+    item.setAttribute("aria-label", fullName || "Pilote " + code);
     const img = document.createElement("img");
     img.src = src || "";
-    img.alt = code;
+    img.alt = fullName || code;
     img.className = "drivers-grid-portrait";
     const label = document.createElement("span");
     label.className = "drivers-grid-label";
-    label.textContent = code;
+    label.textContent = fullName || code;
     item.appendChild(img);
     item.appendChild(label);
     driversGridEl.appendChild(item);
@@ -448,7 +487,11 @@ function createRaceCard(race) {
     const group = document.createElement("div");
     group.className = "race-prediction-group";
     const l = document.createElement("label");
-    l.textContent = label + " (code pilote)";
+    l.appendChild(document.createTextNode(label + " "));
+    const suffix = document.createElement("span");
+    suffix.className = "race-prediction-label-suffix";
+    suffix.textContent = "(code pilote)";
+    l.appendChild(suffix);
     const iconWrap = document.createElement("div");
     iconWrap.className = "race-driver-icon-wrap";
     const iconImg = document.createElement("img");
@@ -460,6 +503,8 @@ function createRaceCard(race) {
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
+    input.addEventListener("input", () => updatePredictionLabelSuffix(input));
+    input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
     group.appendChild(l);
     group.appendChild(iconWrap);
     group.appendChild(input);
@@ -552,7 +597,11 @@ function createSprintWeekendCard(race) {
       const group = document.createElement("div");
       group.className = "race-prediction-group";
       const l = document.createElement("label");
-      l.textContent = lbl + " (code pilote)";
+      l.appendChild(document.createTextNode(lbl + " "));
+      const suffix = document.createElement("span");
+      suffix.className = "race-prediction-label-suffix";
+      suffix.textContent = "(code pilote)";
+      l.appendChild(suffix);
       const iconWrap = document.createElement("div");
       iconWrap.className = "race-driver-icon-wrap";
       const iconImg = document.createElement("img");
@@ -564,6 +613,8 @@ function createSprintWeekendCard(race) {
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
+      input.addEventListener("input", () => updatePredictionLabelSuffix(input));
+      input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
       group.appendChild(l);
       group.appendChild(iconWrap);
       group.appendChild(input);
@@ -669,6 +720,7 @@ function fillExistingPredictionsAndScores() {
       if (sprintPreds) {
         el._sprintInputs.forEach((input, idx) => {
           input.value = sprintPreds[idx] || "";
+          updatePredictionLabelSuffix(input);
           const group = input.closest(".race-prediction-group");
           const iconImg = group?.querySelector(".race-driver-icon");
           if (iconImg) {
@@ -685,6 +737,7 @@ function fillExistingPredictionsAndScores() {
       if (preds) {
         el._inputs.forEach((input, idx) => {
           input.value = preds[idx] || "";
+          updatePredictionLabelSuffix(input);
           const group = input.closest(".race-prediction-group");
           const iconImg = group?.querySelector(".race-driver-icon");
           if (iconImg) {
@@ -714,6 +767,7 @@ function fillExistingPredictionsAndScores() {
       if (preds) {
         inputs.forEach((input, idx) => {
           input.value = preds[idx] || "";
+          updatePredictionLabelSuffix(input);
           const group = input.closest(".race-prediction-group");
           const iconImg = group?.querySelector(".race-driver-icon");
           if (iconImg) {
