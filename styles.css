@@ -858,9 +858,10 @@ select {
   color: #e0c1ff;
 }
 
-/* Grille des pilotes en bas de page */
+/* Grille des pilotes en bas de page — pleine largeur sous aside + contenu */
 .drivers-grid-section {
   margin-top: 1.5rem;
+  grid-column: 1 / -1;
 }
 
 .drivers-grid-section h2 {
