@@ -59,14 +59,58 @@ const RACES_2026 = [
 
 const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
 
-// Positions du tracé dans l'image sprite calendrier F1 2026 (5 colonnes x 5 lignes, ~128x171 px par cellule)
-const TRACK_SPRITE = {
-  aus: [0, 0], chn: [1, 0], jpn: [2, 0], bah: [3, 0], sau: [4, 0],
-  mia: [0, 1], can: [1, 1], mon: [2, 1], "esp-bar": [3, 1], aut: [4, 1],
-  gbr: [0, 2], bel: [1, 2], hun: [3, 2], ned: [4, 2],
-  ita: [0, 3], "esp-mad": [1, 3], aze: [2, 3], sin: [3, 3], "usa-aus": [4, 3],
-  mex: [0, 4], bra: [1, 4], "usa-veg": [2, 4], qat: [3, 4], abu: [4, 4]
+// Images des tracés de circuits (cartes détaillées par GP)
+const TRACK_IMAGES = {
+  aus: "assets/img/tracks/track-aus.png", chn: "assets/img/tracks/track-chn.png",
+  jpn: "assets/img/tracks/track-jpn.png", bah: "assets/img/tracks/track-bah.png",
+  sau: "assets/img/tracks/track-sau.png", mia: "assets/img/tracks/track-mia.png",
+  can: "assets/img/tracks/track-can.png", mon: "assets/img/tracks/track-mon.png",
+  "esp-bar": "assets/img/tracks/track-esp-bar.png", aut: "assets/img/tracks/track-aut.png",
+  gbr: "assets/img/tracks/track-gbr.png", bel: "assets/img/tracks/track-bel.png",
+  hun: "assets/img/tracks/track-hun.png", ned: "assets/img/tracks/track-ned.png",
+  ita: "assets/img/tracks/track-ita.png", "esp-mad": "assets/img/tracks/track-esp-mad.png",
+  aze: "assets/img/tracks/track-aze.png", sin: "assets/img/tracks/track-sin.png",
+  "usa-aus": "assets/img/tracks/track-usa-aus.png", mex: "assets/img/tracks/track-mex.png",
+  bra: "assets/img/tracks/track-bra.png", "usa-veg": "assets/img/tracks/track-usa-veg.png",
+  qat: "assets/img/tracks/track-qat.png", abu: "assets/img/tracks/track-abu.png",
+  imo: "assets/img/tracks/track-imola.png"
 };
+
+// Icônes pilotes (code FIA → chemin image). Ajouter les fichiers dans assets/img/drivers/
+const DRIVER_ICONS = {
+  VER: "assets/img/drivers/VER.png", HAD: "assets/img/drivers/HAD.png",
+  LEC: "assets/img/drivers/LEC.png", HAM: "assets/img/drivers/HAM.png",
+  RUS: "assets/img/drivers/RUS.png", ANT: "assets/img/drivers/ANT.png",
+  NOR: "assets/img/drivers/NOR.png", PIA: "assets/img/drivers/PIA.png",
+  ALO: "assets/img/drivers/ALO.png", STR: "assets/img/drivers/STR.png",
+  GAS: "assets/img/drivers/GAS.png", COL: "assets/img/drivers/COL.png",
+  ALB: "assets/img/drivers/ALB.png", SAI: "assets/img/drivers/SAI.png",
+  LAW: "assets/img/drivers/LAW.png", LIN: "assets/img/drivers/LIN.png",
+  HUL: "assets/img/drivers/HUL.png", BOR: "assets/img/drivers/BOR.png",
+  BEA: "assets/img/drivers/BEA.png", OCO: "assets/img/drivers/OCO.png",
+  PER: "assets/img/drivers/PER.png", BOT: "assets/img/drivers/BOT.png"
+};
+
+// Icônes écuries (nom ou code → chemin image). Fichiers dans assets/img/teams/
+const CONSTRUCTOR_ICONS = {
+  MCLAREN: "assets/img/teams/MCLAREN.png", MERCEDES: "assets/img/teams/MERCEDES.png",
+  REDBULL: "assets/img/teams/REDBULL.png", RED_BULL: "assets/img/teams/REDBULL.png",
+  FERRARI: "assets/img/teams/FERRARI.png", WILLIAMS: "assets/img/teams/WILLIAMS.png",
+  HAAS: "assets/img/teams/HAAS.png", ASTON_MARTIN: "assets/img/teams/ASTON_MARTIN.png",
+  ASTONMARTIN: "assets/img/teams/ASTON_MARTIN.png", RACING_BULLS: "assets/img/teams/RB.png",
+  RB: "assets/img/teams/RB.png", ALPINE: "assets/img/teams/ALPINE.png",
+  AUDI: "assets/img/teams/AUDI.png", CADILLAC: "assets/img/teams/CADILLAC.png"
+};
+
+function getDriverIconSrc(code) {
+  const c = (code || "").toUpperCase().trim();
+  return DRIVER_ICONS[c] || null;
+}
+
+function getConstructorIconSrc(name) {
+  const n = (name || "").toUpperCase().replace(/\s+/g, "_").trim();
+  return CONSTRUCTOR_ICONS[n] || CONSTRUCTOR_ICONS[name?.toUpperCase().replace(/\s+/g, "")] || null;
+}
 
 function getStorageKey() {
   return "f1-" + SEASON_YEAR + "-predictions-v1";
@@ -347,14 +391,13 @@ function createRaceCard(race) {
   headerLeft.appendChild(meta);
   header.appendChild(headerLeft);
 
-  const sprite = TRACK_SPRITE[race.id];
-  if (sprite) {
-    const trackEl = document.createElement("div");
-    trackEl.className = "race-track-thumb";
+  const trackSrc = TRACK_IMAGES[race.id];
+  if (trackSrc) {
+    const trackEl = document.createElement("img");
+    trackEl.className = "race-track-thumb race-track-img";
+    trackEl.src = trackSrc;
+    trackEl.alt = "";
     trackEl.setAttribute("aria-hidden", "true");
-    const [sx, sy] = sprite;
-    trackEl.style.backgroundImage = "url('assets/img/f1-2026-tracks.png')";
-    trackEl.style.backgroundPosition = `-${sx * 42}px -${sy * 56}px`;
     header.appendChild(trackEl);
   }
 
@@ -433,13 +476,13 @@ function createSprintWeekendCard(race) {
   headerLeft.appendChild(title);
   headerLeft.appendChild(meta);
   header.appendChild(headerLeft);
-  const sprite = TRACK_SPRITE[race.id];
-  if (sprite) {
-    const trackEl = document.createElement("div");
-    trackEl.className = "race-track-thumb";
+  const trackSrc = TRACK_IMAGES[race.id];
+  if (trackSrc) {
+    const trackEl = document.createElement("img");
+    trackEl.className = "race-track-thumb race-track-img";
+    trackEl.src = trackSrc;
+    trackEl.alt = "";
     trackEl.setAttribute("aria-hidden", "true");
-    trackEl.style.backgroundImage = "url('assets/img/f1-2026-tracks.png')";
-    trackEl.style.backgroundPosition = `-${sprite[0] * 42}px -${sprite[1] * 56}px`;
     header.appendChild(trackEl);
   }
   wrapper.appendChild(header);
@@ -534,23 +577,24 @@ function renderRaces() {
   const racesOnly = RACES.filter((r) => !r.sprint);
   const sprintWeekends = RACES.filter((r) => r.sprint);
 
-  const sectionCourses = document.createElement("div");
-  sectionCourses.className = "race-list-section";
-  const titleCourses = document.createElement("h3");
-  titleCourses.className = "race-list-section-title";
-  titleCourses.textContent = "Courses (sans sprint)";
-  sectionCourses.appendChild(titleCourses);
-  racesOnly.forEach((race) => sectionCourses.appendChild(createRaceCard(race)));
-  raceListEl.appendChild(sectionCourses);
+  const colNormals = document.createElement("div");
+  colNormals.className = "race-list-column race-list-normals";
+  const titleNormals = document.createElement("h3");
+  titleNormals.className = "race-list-section-title";
+  titleNormals.textContent = "Courses normales";
+  colNormals.appendChild(titleNormals);
+  racesOnly.forEach((race) => colNormals.appendChild(createRaceCard(race)));
 
-  const sectionSprint = document.createElement("div");
-  sectionSprint.className = "race-list-section";
-  const titleSprint = document.createElement("h3");
-  titleSprint.className = "race-list-section-title";
-  titleSprint.textContent = "Weekends Sprint (course + sprint)";
-  sectionSprint.appendChild(titleSprint);
-  sprintWeekends.forEach((race) => sectionSprint.appendChild(createSprintWeekendCard(race)));
-  raceListEl.appendChild(sectionSprint);
+  const colSprints = document.createElement("div");
+  colSprints.className = "race-list-column race-list-sprints";
+  const titleSprints = document.createElement("h3");
+  titleSprints.className = "race-list-section-title";
+  titleSprints.textContent = "Weekends Sprint";
+  colSprints.appendChild(titleSprints);
+  sprintWeekends.forEach((race) => colSprints.appendChild(createSprintWeekendCard(race)));
+
+  raceListEl.appendChild(colNormals);
+  raceListEl.appendChild(colSprints);
 
   fillExistingPredictionsAndScores();
 }
@@ -662,7 +706,28 @@ function renderResultsComparison(race, wrap) {
 
   const officialLine = document.createElement("div");
   officialLine.className = "results-comparison-official";
-  officialLine.innerHTML = `Résultat officiel : 1er <strong>${official[0] || "—"}</strong>, 2e <strong>${official[1] || "—"}</strong>, 3e <strong>${official[2] || "—"}</strong>`;
+  const officialParts = [];
+  ["1er", "2e", "3e"].forEach((label, idx) => {
+    const code = (official[idx] || "—").toUpperCase();
+    const span = document.createElement("span");
+    span.className = "pred-band results-official-band";
+    const iconSrc = code !== "—" ? getDriverIconSrc(code) : null;
+    if (iconSrc) {
+      const img = document.createElement("img");
+      img.src = iconSrc;
+      img.alt = "";
+      img.className = "pred-driver-icon";
+      img.onerror = () => { img.style.display = "none"; };
+      span.appendChild(img);
+    }
+    span.appendChild(document.createTextNode(`${label} ${code}`));
+    officialParts.push(span);
+  });
+  officialLine.appendChild(document.createTextNode("Résultat officiel : "));
+  officialParts.forEach((span, i) => {
+    if (i > 0) officialLine.appendChild(document.createTextNode(" "));
+    officialLine.appendChild(span);
+  });
   box.appendChild(officialLine);
 
   state.players.forEach((playerName) => {
@@ -676,15 +741,24 @@ function renderResultsComparison(race, wrap) {
       const off = (official[idx] || "").toUpperCase();
       const ok = pred && off && pred === off;
       const span = document.createElement("span");
-      span.className = ok ? "pred-correct" : "pred-wrong";
-      span.textContent = `${label} ${pred} ${ok ? "✓" : "✗"}`;
+      span.className = "pred-band " + (ok ? "pred-correct" : "pred-wrong");
       span.title = ok ? "Correct" : "Incorrect";
+      const iconSrc = pred && pred !== "—" ? getDriverIconSrc(pred) : null;
+      if (iconSrc) {
+        const img = document.createElement("img");
+        img.src = iconSrc;
+        img.alt = "";
+        img.className = "pred-driver-icon";
+        img.onerror = () => { img.style.display = "none"; };
+        span.appendChild(img);
+      }
+      span.appendChild(document.createTextNode(`${label} ${pred} ${ok ? "✓" : "✗"}`));
       return span;
     });
 
     line.appendChild(document.createTextNode(`${playerName} : `));
     parts.forEach((span, i) => {
-      if (i > 0) line.appendChild(document.createTextNode(" · "));
+      if (i > 0) line.appendChild(document.createTextNode(" "));
       line.appendChild(span);
     });
     box.appendChild(line);
@@ -896,16 +970,44 @@ function renderSeasonPredictions() {
     const form = document.createElement("div");
     form.className = "season-form";
     const inputs = [];
+    const isDrivers = key === "drivers";
     labels.forEach((label, idx) => {
       const group = document.createElement("div");
+      group.className = "season-form-group";
       const l = document.createElement("label");
       l.textContent = label;
+      group.appendChild(l);
+      const inputWrap = document.createElement("div");
+      inputWrap.className = "season-input-wrap";
+      const icon = document.createElement("img");
+      icon.className = isDrivers ? "pred-driver-icon" : "pred-team-icon";
+      icon.alt = "";
+      const val = (values[idx] || "").trim().toUpperCase();
+      const iconSrc = isDrivers ? getDriverIconSrc(val) : getConstructorIconSrc(val);
+      if (iconSrc && val) {
+        icon.src = iconSrc;
+        icon.onerror = () => { icon.style.display = "none"; };
+      } else {
+        icon.style.display = "none";
+      }
+      inputWrap.appendChild(icon);
       const input = document.createElement("input");
       input.type = "text";
-      input.placeholder = label;
+      input.placeholder = isDrivers ? "ex: VER" : "ex: FERRARI";
       input.value = values[idx] || "";
-      group.appendChild(l);
-      group.appendChild(input);
+      input.addEventListener("input", () => {
+        const v = input.value.trim().toUpperCase();
+        const src = isDrivers ? getDriverIconSrc(v) : getConstructorIconSrc(v);
+        if (src && v) {
+          icon.src = src;
+          icon.style.display = "";
+          icon.onerror = () => { icon.style.display = "none"; };
+        } else {
+          icon.style.display = "none";
+        }
+      });
+      inputWrap.appendChild(input);
+      group.appendChild(inputWrap);
       form.appendChild(group);
       inputs.push(input);
     });
