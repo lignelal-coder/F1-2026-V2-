@@ -667,6 +667,7 @@ select {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 8px;
 }
 
 .race-driver-icon {
@@ -675,6 +676,15 @@ select {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border);
+}
+
+.race-constructor-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .race-form label {

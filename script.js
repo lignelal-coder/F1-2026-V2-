@@ -142,17 +142,30 @@ function updatePredictionLabelSuffix(input) {
   suffix.textContent = team ? "(" + team + ")" : "(code pilote)";
 }
 
-/** Met à jour l’icône pilote au-dessus du champ quand on modifie la prédiction (saisie en direct). */
+/** Met à jour l’icône pilote et l’icône écurie (voiture) au-dessus du champ quand on modifie la prédiction. */
 function updateDriverIconForInput(input) {
   const group = input?.closest(".race-prediction-group");
   const iconImg = group?.querySelector(".race-driver-icon");
-  if (!iconImg) return;
-  const src = getDriverIconSrc(input.value?.trim());
-  if (src) {
-    iconImg.src = src;
-    iconImg.style.display = "block";
-  } else {
-    iconImg.style.display = "none";
+  const carImg = group?.querySelector(".race-constructor-icon");
+  const code = input.value?.trim();
+  const driverSrc = getDriverIconSrc(code);
+  if (iconImg) {
+    if (driverSrc) {
+      iconImg.src = driverSrc;
+      iconImg.style.display = "block";
+    } else {
+      iconImg.style.display = "none";
+    }
+  }
+  if (carImg) {
+    const teamName = getConstructorNameForDriver(code);
+    const carSrc = teamName ? getConstructorIconSrc(teamName) : null;
+    if (carSrc) {
+      carImg.src = carSrc;
+      carImg.style.display = "block";
+    } else {
+      carImg.style.display = "none";
+    }
   }
 }
 
@@ -520,6 +533,12 @@ function createRaceCard(race) {
     iconImg.style.display = "none";
     iconImg.onerror = () => { iconImg.style.display = "none"; };
     iconWrap.appendChild(iconImg);
+    const carImg = document.createElement("img");
+    carImg.className = "race-constructor-icon";
+    carImg.alt = "";
+    carImg.style.display = "none";
+    carImg.onerror = () => { carImg.style.display = "none"; };
+    iconWrap.appendChild(carImg);
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
@@ -635,6 +654,12 @@ function createSprintWeekendCard(race) {
       iconImg.style.display = "none";
       iconImg.onerror = () => { iconImg.style.display = "none"; };
       iconWrap.appendChild(iconImg);
+      const carImg = document.createElement("img");
+      carImg.className = "race-constructor-icon";
+      carImg.alt = "";
+      carImg.style.display = "none";
+      carImg.onerror = () => { carImg.style.display = "none"; };
+      iconWrap.appendChild(carImg);
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
@@ -752,34 +777,14 @@ function fillExistingPredictionsAndScores() {
         el._sprintInputs.forEach((input, idx) => {
           input.value = sprintPreds[idx] || "";
           updatePredictionLabelSuffix(input);
-          const group = input.closest(".race-prediction-group");
-          const iconImg = group?.querySelector(".race-driver-icon");
-          if (iconImg) {
-            const src = getDriverIconSrc(input.value.trim());
-            if (src) {
-              iconImg.src = src;
-              iconImg.style.display = "block";
-            } else {
-              iconImg.style.display = "none";
-            }
-          }
+          updateDriverIconForInput(input);
         });
       }
       if (preds) {
         el._inputs.forEach((input, idx) => {
           input.value = preds[idx] || "";
           updatePredictionLabelSuffix(input);
-          const group = input.closest(".race-prediction-group");
-          const iconImg = group?.querySelector(".race-driver-icon");
-          if (iconImg) {
-            const src = getDriverIconSrc(input.value.trim());
-            if (src) {
-              iconImg.src = src;
-              iconImg.style.display = "block";
-            } else {
-              iconImg.style.display = "none";
-            }
-          }
+          updateDriverIconForInput(input);
         });
       }
       const race = el._race || RACES.find((r) => r.id === raceId);
@@ -799,17 +804,7 @@ function fillExistingPredictionsAndScores() {
         inputs.forEach((input, idx) => {
           input.value = preds[idx] || "";
           updatePredictionLabelSuffix(input);
-          const group = input.closest(".race-prediction-group");
-          const iconImg = group?.querySelector(".race-driver-icon");
-          if (iconImg) {
-            const src = getDriverIconSrc(input.value.trim());
-            if (src) {
-              iconImg.src = src;
-              iconImg.style.display = "block";
-            } else {
-              iconImg.style.display = "none";
-            }
-          }
+          updateDriverIconForInput(input);
         });
       }
       const race = el._race || RACES.find((r) => r.id === raceId);
