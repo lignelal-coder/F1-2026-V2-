@@ -432,14 +432,16 @@ select {
 
 .season-input-wrap {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .season-input-wrap .pred-driver-icon,
 .season-input-wrap .pred-team-icon {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
+  order: -1;
 }
 
 .season-form input {
@@ -627,6 +629,27 @@ select {
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 6px;
   align-items: center;
+}
+
+.race-prediction-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.race-driver-icon-wrap {
+  min-height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.race-driver-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
 }
 
 .race-form label {

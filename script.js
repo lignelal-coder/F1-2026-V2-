@@ -407,14 +407,31 @@ function createRaceCard(race) {
   const inputs = [];
   ["1er", "2e", "3e"].forEach((label, idx) => {
     const group = document.createElement("div");
+    group.className = "race-prediction-group";
     const l = document.createElement("label");
     l.textContent = label + " (code pilote)";
-
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "race-driver-icon-wrap";
+    const iconImg = document.createElement("img");
+    iconImg.className = "race-driver-icon";
+    iconImg.alt = "";
+    iconImg.style.display = "none";
+    iconImg.onerror = () => { iconImg.style.display = "none"; };
+    iconWrap.appendChild(iconImg);
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
-
+    input.addEventListener("input", () => {
+      const src = getDriverIconSrc(input.value.trim());
+      if (src) {
+        iconImg.src = src;
+        iconImg.style.display = "block";
+      } else {
+        iconImg.style.display = "none";
+      }
+    });
     group.appendChild(l);
+    group.appendChild(iconWrap);
     group.appendChild(input);
     inputs.push(input);
     form.appendChild(group);
@@ -502,12 +519,31 @@ function createSprintWeekendCard(race) {
     const inputs = [];
     ["1er", "2e", "3e"].forEach((lbl, idx) => {
       const group = document.createElement("div");
+      group.className = "race-prediction-group";
       const l = document.createElement("label");
       l.textContent = lbl + " (code pilote)";
+      const iconWrap = document.createElement("div");
+      iconWrap.className = "race-driver-icon-wrap";
+      const iconImg = document.createElement("img");
+      iconImg.className = "race-driver-icon";
+      iconImg.alt = "";
+      iconImg.style.display = "none";
+      iconImg.onerror = () => { iconImg.style.display = "none"; };
+      iconWrap.appendChild(iconImg);
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
+      input.addEventListener("input", () => {
+        const src = getDriverIconSrc(input.value.trim());
+        if (src) {
+          iconImg.src = src;
+          iconImg.style.display = "block";
+        } else {
+          iconImg.style.display = "none";
+        }
+      });
       group.appendChild(l);
+      group.appendChild(iconWrap);
       group.appendChild(input);
       form.appendChild(group);
       inputs.push(input);
@@ -607,11 +643,37 @@ function fillExistingPredictionsAndScores() {
     if (el.classList.contains("sprint-weekend-card")) {
       const preds = state.predictions[raceId]?.[player];
       const sprintPreds = state.sprintPredictions[raceId]?.[player];
-      if (preds) {
-        el._inputs.forEach((input, idx) => { input.value = preds[idx] || ""; });
-      }
       if (sprintPreds) {
-        el._sprintInputs.forEach((input, idx) => { input.value = sprintPreds[idx] || ""; });
+        el._sprintInputs.forEach((input, idx) => {
+          input.value = sprintPreds[idx] || "";
+          const group = input.closest(".race-prediction-group");
+          const iconImg = group?.querySelector(".race-driver-icon");
+          if (iconImg) {
+            const src = getDriverIconSrc(input.value.trim());
+            if (src) {
+              iconImg.src = src;
+              iconImg.style.display = "block";
+            } else {
+              iconImg.style.display = "none";
+            }
+          }
+        });
+      }
+      if (preds) {
+        el._inputs.forEach((input, idx) => {
+          input.value = preds[idx] || "";
+          const group = input.closest(".race-prediction-group");
+          const iconImg = group?.querySelector(".race-driver-icon");
+          if (iconImg) {
+            const src = getDriverIconSrc(input.value.trim());
+            if (src) {
+              iconImg.src = src;
+              iconImg.style.display = "block";
+            } else {
+              iconImg.style.display = "none";
+            }
+          }
+        });
       }
       setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
       setSprintPartLocked(el, !!(sprintPreds && (sprintPreds[0] || sprintPreds[1] || sprintPreds[2])));
@@ -624,7 +686,20 @@ function fillExistingPredictionsAndScores() {
       const tag = el._pointsTag;
       const preds = state.predictions[raceId]?.[player];
       if (preds) {
-        inputs.forEach((input, idx) => { input.value = preds[idx] || ""; });
+        inputs.forEach((input, idx) => {
+          input.value = preds[idx] || "";
+          const group = input.closest(".race-prediction-group");
+          const iconImg = group?.querySelector(".race-driver-icon");
+          if (iconImg) {
+            const src = getDriverIconSrc(input.value.trim());
+            if (src) {
+              iconImg.src = src;
+              iconImg.style.display = "block";
+            } else {
+              iconImg.style.display = "none";
+            }
+          }
+        });
       }
       setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
       const pts = scoreRaceForPlayer(raceId, player);
