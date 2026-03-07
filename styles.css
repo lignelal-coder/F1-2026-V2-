@@ -858,6 +858,44 @@ select {
   color: #e0c1ff;
 }
 
+/* Grille des pilotes en bas de page */
+.drivers-grid-section {
+  margin-top: 1.5rem;
+}
+
+.drivers-grid-section h2 {
+  margin-bottom: 1rem;
+}
+
+.drivers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+  justify-items: center;
+}
+
+.drivers-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.drivers-grid-portrait {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+}
+
+.drivers-grid-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .footer {
   padding: 8px 22px 14px;
   font-size: 12px;

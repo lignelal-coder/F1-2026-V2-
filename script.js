@@ -91,6 +91,13 @@ const DRIVER_ICONS = {
   PER: "assets/img/drivers/PER.png", BOT: "assets/img/drivers/BOT.png"
 };
 
+// Ordre d'affichage pour la grille des pilotes en bas de page (par écurie)
+const DRIVERS_GRID_ORDER = [
+  "VER", "HAD", "LEC", "HAM", "RUS", "ANT", "NOR", "PIA",
+  "ALO", "STR", "GAS", "COL", "ALB", "SAI", "LAW", "LIN",
+  "HUL", "BOR", "BEA", "OCO", "PER", "BOT"
+];
+
 // Icônes écuries (nom ou code → chemin image). Fichiers dans assets/img/teams/
 const CONSTRUCTOR_ICONS = {
   MCLAREN: "assets/img/teams/MCLAREN.png", MERCEDES: "assets/img/teams/MERCEDES.png",
@@ -224,11 +231,33 @@ const seasonProfileLabel = document.getElementById("seasonProfileLabel");
 const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 const seasonYearBadge = document.getElementById("seasonYearBadge");
+const driversGridEl = document.getElementById("driversGrid");
 
 function updateSeasonYearBadge() {
   if (seasonYearBadge) {
     seasonYearBadge.textContent = "Saison " + SEASON_YEAR + (SEASON_YEAR === 2025 ? " (essai)" : "");
   }
+}
+
+function renderDriversGrid() {
+  if (!driversGridEl) return;
+  driversGridEl.innerHTML = "";
+  DRIVERS_GRID_ORDER.forEach((code) => {
+    const src = getDriverIconSrc(code);
+    const item = document.createElement("div");
+    item.className = "drivers-grid-item";
+    item.setAttribute("aria-label", "Pilote " + code);
+    const img = document.createElement("img");
+    img.src = src || "";
+    img.alt = code;
+    img.className = "drivers-grid-portrait";
+    const label = document.createElement("span");
+    label.className = "drivers-grid-label";
+    label.textContent = code;
+    item.appendChild(img);
+    item.appendChild(label);
+    driversGridEl.appendChild(item);
+  });
 }
 
 function updateVisibility() {
@@ -1143,6 +1172,7 @@ function renderAll() {
   fillExistingPredictionsAndScores();
   renderSeasonPredictions();
   renderLeaderboard();
+  renderDriversGrid();
 }
 
 initPlayerSelect();
@@ -1155,6 +1185,7 @@ if (state.lockedProfile) {
   renderSeasonPredictions();
   renderAdminResults();
   renderLeaderboard();
+  renderDriversGrid();
 } else {
   renderProfileChoice();
 }
