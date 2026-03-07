@@ -90,14 +90,32 @@ body {
   }
 }
 
+/* Colonne de gauche fixe au scroll (ne bouge plus quand on défile) */
+@media (min-width: 1001px) {
+  .f1-2026-visual {
+    position: fixed;
+    left: 22px;
+    top: 70px;
+    width: 220px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    align-self: unset;
+  }
+}
+
 .f1-2026-visual {
-  position: sticky;
-  top: 20px;
-  align-self: start;
   text-align: center;
   padding: 12px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
+}
+
+@media (max-width: 1000px) {
+  .f1-2026-visual {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-height: none;
+  }
 }
 
 .f1-2026-visual-title {

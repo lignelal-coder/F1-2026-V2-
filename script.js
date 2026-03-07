@@ -136,6 +136,20 @@ function updatePredictionLabelSuffix(input) {
   suffix.textContent = team ? "(" + team + ")" : "(code pilote)";
 }
 
+/** Met à jour l’icône pilote au-dessus du champ quand on modifie la prédiction (saisie en direct). */
+function updateDriverIconForInput(input) {
+  const group = input?.closest(".race-prediction-group");
+  const iconImg = group?.querySelector(".race-driver-icon");
+  if (!iconImg) return;
+  const src = getDriverIconSrc(input.value?.trim());
+  if (src) {
+    iconImg.src = src;
+    iconImg.style.display = "block";
+  } else {
+    iconImg.style.display = "none";
+  }
+}
+
 // Icônes écuries (nom ou code → chemin image). Fichiers dans assets/img/teams/
 const CONSTRUCTOR_ICONS = {
   MCLAREN: "assets/img/teams/MCLAREN.png", MERCEDES: "assets/img/teams/MERCEDES.png",
@@ -503,7 +517,10 @@ function createRaceCard(race) {
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
-    input.addEventListener("input", () => updatePredictionLabelSuffix(input));
+    input.addEventListener("input", () => {
+      updatePredictionLabelSuffix(input);
+      updateDriverIconForInput(input);
+    });
     input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
     group.appendChild(l);
     group.appendChild(iconWrap);
@@ -613,7 +630,10 @@ function createSprintWeekendCard(race) {
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
-      input.addEventListener("input", () => updatePredictionLabelSuffix(input));
+      input.addEventListener("input", () => {
+        updatePredictionLabelSuffix(input);
+        updateDriverIconForInput(input);
+      });
       input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
       group.appendChild(l);
       group.appendChild(iconWrap);
