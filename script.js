@@ -112,6 +112,16 @@ function getConstructorIconSrc(name) {
   return CONSTRUCTOR_ICONS[n] || CONSTRUCTOR_ICONS[name?.toUpperCase().replace(/\s+/g, "")] || null;
 }
 
+/** Verrouille à partir du jour du GP : on peut modifier jusqu'à la veille (inclus). */
+function isRaceLocked(race) {
+  if (!race || !race.date) return false;
+  const raceDay = new Date(race.date);
+  raceDay.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today >= raceDay;
+}
+
 function getStorageKey() {
   return "f1-" + SEASON_YEAR + "-predictions-v1";
 }
@@ -421,15 +431,6 @@ function createRaceCard(race) {
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
-    input.addEventListener("input", () => {
-      const src = getDriverIconSrc(input.value.trim());
-      if (src) {
-        iconImg.src = src;
-        iconImg.style.display = "block";
-      } else {
-        iconImg.style.display = "none";
-      }
-    });
     group.appendChild(l);
     group.appendChild(iconWrap);
     group.appendChild(input);
@@ -449,7 +450,7 @@ function createRaceCard(race) {
     if (!state.predictions[race.id]) state.predictions[race.id] = {};
     state.predictions[race.id][player] = racePreds;
     saveState();
-    setRaceCardLocked(wrapper, true);
+    setRaceCardLocked(wrapper, isRaceLocked(race));
     renderLeaderboard();
   });
 
@@ -467,6 +468,7 @@ function createRaceCard(race) {
   wrapper._inputs = inputs;
   wrapper._saveBtn = btn;
   wrapper._raceId = race.id;
+  wrapper._race = race;
 
   return wrapper;
 }
@@ -533,15 +535,6 @@ function createSprintWeekendCard(race) {
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
-      input.addEventListener("input", () => {
-        const src = getDriverIconSrc(input.value.trim());
-        if (src) {
-          iconImg.src = src;
-          iconImg.style.display = "block";
-        } else {
-          iconImg.style.display = "none";
-        }
-      });
       group.appendChild(l);
       group.appendChild(iconWrap);
       group.appendChild(input);
@@ -565,8 +558,8 @@ function createSprintWeekendCard(race) {
       if (!store[race.id]) store[race.id] = {};
       store[race.id][player] = preds;
       saveState();
-      if (stateKey === "predictions") setRaceCardLocked(wrapper, true);
-      else setSprintPartLocked(wrapper, true);
+      if (stateKey === "predictions") setRaceCardLocked(wrapper, isRaceLocked(race));
+      else setSprintPartLocked(wrapper, isRaceLocked(race));
       renderLeaderboard();
     });
     return { col, inputs, btn, tag };
@@ -579,6 +572,7 @@ function createSprintWeekendCard(race) {
   wrapper.appendChild(twoCol);
 
   wrapper._raceId = race.id;
+  wrapper._race = race;
   wrapper._inputs = coursePart.inputs;
   wrapper._pointsTag = coursePart.tag;
   wrapper._saveBtn = coursePart.btn;
@@ -675,8 +669,11 @@ function fillExistingPredictionsAndScores() {
           }
         });
       }
-      setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
-      setSprintPartLocked(el, !!(sprintPreds && (sprintPreds[0] || sprintPreds[1] || sprintPreds[2])));
+      const race = el._race || RACES.find((r) => r.id === raceId);
+      const hasSavedCourse = !!(preds && (preds[0] || preds[1] || preds[2]));
+      const hasSavedSprint = !!(sprintPreds && (sprintPreds[0] || sprintPreds[1] || sprintPreds[2]));
+      setRaceCardLocked(el, hasSavedCourse && isRaceLocked(race));
+      setSprintPartLocked(el, hasSavedSprint && isRaceLocked(race));
       const ptsRace = scoreRaceForPlayer(raceId, player);
       const ptsSprint = scoreSprintForPlayer(raceId, player);
       el._pointsTag.textContent = `Points : ${ptsRace}`;
@@ -701,7 +698,9 @@ function fillExistingPredictionsAndScores() {
           }
         });
       }
-      setRaceCardLocked(el, !!(preds && (preds[0] || preds[1] || preds[2])));
+      const race = el._race || RACES.find((r) => r.id === raceId);
+      const hasSaved = !!(preds && (preds[0] || preds[1] || preds[2]));
+      setRaceCardLocked(el, hasSaved && isRaceLocked(race));
       const pts = scoreRaceForPlayer(raceId, player);
       tag.textContent = `Points actuels : ${pts}`;
     }
@@ -1070,17 +1069,6 @@ function renderSeasonPredictions() {
       input.type = "text";
       input.placeholder = isDrivers ? "ex: VER" : "ex: FERRARI";
       input.value = values[idx] || "";
-      input.addEventListener("input", () => {
-        const v = input.value.trim().toUpperCase();
-        const src = isDrivers ? getDriverIconSrc(v) : getConstructorIconSrc(v);
-        if (src && v) {
-          icon.src = src;
-          icon.style.display = "";
-          icon.onerror = () => { icon.style.display = "none"; };
-        } else {
-          icon.style.display = "none";
-        }
-      });
       inputWrap.appendChild(input);
       group.appendChild(inputWrap);
       form.appendChild(group);
@@ -1104,8 +1092,36 @@ function renderSeasonPredictions() {
     if (!d[0] && !d[1] && !d[2] && !c[0] && !c[1] && !c[2]) return;
     state.seasonPredictions[currentPlayer] = { drivers: d, constructors: c };
     saveState();
-    driverInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
-    constructorInputs.forEach((i) => { i.disabled = true; i.readOnly = true; });
+    driverInputs.forEach((input) => {
+      input.disabled = true;
+      input.readOnly = true;
+      const icon = input.closest(".season-input-wrap")?.querySelector("img");
+      if (icon) {
+        const src = getDriverIconSrc(input.value.trim());
+        if (src) {
+          icon.src = src;
+          icon.style.display = "";
+          icon.onerror = () => { icon.style.display = "none"; };
+        } else {
+          icon.style.display = "none";
+        }
+      }
+    });
+    constructorInputs.forEach((input) => {
+      input.disabled = true;
+      input.readOnly = true;
+      const icon = input.closest(".season-input-wrap")?.querySelector("img");
+      if (icon) {
+        const src = getConstructorIconSrc(input.value.trim());
+        if (src) {
+          icon.src = src;
+          icon.style.display = "";
+          icon.onerror = () => { icon.style.display = "none"; };
+        } else {
+          icon.style.display = "none";
+        }
+      }
+    });
     btn.disabled = true;
     btn.textContent = "Enregistré";
   });

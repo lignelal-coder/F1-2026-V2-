@@ -115,6 +115,20 @@ body {
   display: block;
 }
 
+.f1-2026-visual .f1-2026-visual-title:not(:first-child) {
+  margin-top: 20px;
+}
+
+.f1-2026-visual-img {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+  margin-top: 6px;
+}
+
 .header {
   display: flex;
   flex-wrap: wrap;
