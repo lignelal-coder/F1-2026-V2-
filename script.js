@@ -147,8 +147,11 @@ function updateDriverIconForInput(input) {
   const group = input?.closest(".race-prediction-group");
   const iconImg = group?.querySelector(".race-driver-icon");
   const carImg = group?.querySelector(".race-constructor-icon");
+  const carFallback = group?.querySelector(".race-constructor-fallback");
   const code = input.value?.trim();
   const driverSrc = getDriverIconSrc(code);
+  const teamName = getConstructorNameForDriver(code);
+
   if (iconImg) {
     if (driverSrc) {
       iconImg.src = driverSrc;
@@ -157,14 +160,20 @@ function updateDriverIconForInput(input) {
       iconImg.style.display = "none";
     }
   }
-  if (carImg) {
-    const teamName = getConstructorNameForDriver(code);
-    const carSrc = teamName ? getConstructorIconSrc(teamName) : null;
+
+  if (carImg) carImg.style.display = "none";
+  if (carFallback) carFallback.style.display = "none";
+  if (teamName) {
+    const carSrc = getConstructorIconSrc(teamName);
     if (carSrc) {
       carImg.src = carSrc;
       carImg.style.display = "block";
+      carImg.onerror = () => {
+        carImg.style.display = "none";
+        if (carFallback) carFallback.style.display = "inline-flex";
+      };
     } else {
-      carImg.style.display = "none";
+      if (carFallback) carFallback.style.display = "inline-flex";
     }
   }
 }
@@ -198,6 +207,41 @@ function isRaceLocked(race) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today >= raceDay;
+}
+
+/** Sauvegarde automatique des prédictions quand on quitte un champ (blur) pour que le refresh garde les modifs. */
+function savePredictionsOnBlur(input) {
+  const card = input.closest(".race");
+  if (!card || !card._raceId) return;
+  const raceId = card._raceId;
+  const race = card._race || RACES.find((r) => r.id === raceId);
+  const player = playerSelect.value;
+  const isSprintInput = card._sprintInputs && Array.prototype.indexOf.call(card._sprintInputs, input) >= 0;
+
+  if (card._sprintInputs && isSprintInput) {
+    const preds = card._sprintInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    if (!state.sprintPredictions[raceId]) state.sprintPredictions[raceId] = {};
+    if (!preds[0] && !preds[1] && !preds[2]) delete state.sprintPredictions[raceId][player];
+    else state.sprintPredictions[raceId][player] = preds;
+    saveState();
+    setSprintPartLocked(card, (preds[0] || preds[1] || preds[2]) && isRaceLocked(race));
+    if (card._sprintPointsTag) {
+      const pts = scoreSprintForPlayer(raceId, player);
+      card._sprintPointsTag.textContent = `Points : ${pts}`;
+    }
+  } else {
+    const preds = card._inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
+    if (!state.predictions[raceId]) state.predictions[raceId] = {};
+    if (!preds[0] && !preds[1] && !preds[2]) delete state.predictions[raceId][player];
+    else state.predictions[raceId][player] = preds;
+    saveState();
+    setRaceCardLocked(card, (preds[0] || preds[1] || preds[2]) && isRaceLocked(race));
+    if (card._pointsTag) {
+      const pts = scoreRaceForPlayer(raceId, player);
+      card._pointsTag.textContent = card._sprintPointsTag ? `Points : ${pts}` : `Points actuels : ${pts}`;
+    }
+  }
+  renderLeaderboard();
 }
 
 function getStorageKey() {
@@ -537,8 +581,13 @@ function createRaceCard(race) {
     carImg.className = "race-constructor-icon";
     carImg.alt = "";
     carImg.style.display = "none";
-    carImg.onerror = () => { carImg.style.display = "none"; };
     iconWrap.appendChild(carImg);
+    const carFallback = document.createElement("span");
+    carFallback.className = "race-constructor-fallback";
+    carFallback.setAttribute("aria-label", "Écurie");
+    carFallback.style.display = "none";
+    carFallback.textContent = "🏎️";
+    iconWrap.appendChild(carFallback);
     const input = document.createElement("input");
     input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
     input.dataset.position = String(idx);
@@ -546,7 +595,10 @@ function createRaceCard(race) {
       updatePredictionLabelSuffix(input);
       updateDriverIconForInput(input);
     });
-    input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
+    input.addEventListener("blur", () => {
+      updatePredictionLabelSuffix(input);
+      savePredictionsOnBlur(input);
+    });
     group.appendChild(l);
     group.appendChild(iconWrap);
     group.appendChild(input);
@@ -658,8 +710,13 @@ function createSprintWeekendCard(race) {
       carImg.className = "race-constructor-icon";
       carImg.alt = "";
       carImg.style.display = "none";
-      carImg.onerror = () => { carImg.style.display = "none"; };
       iconWrap.appendChild(carImg);
+      const carFallback = document.createElement("span");
+      carFallback.className = "race-constructor-fallback";
+      carFallback.setAttribute("aria-label", "Écurie");
+      carFallback.style.display = "none";
+      carFallback.textContent = "🏎️";
+      iconWrap.appendChild(carFallback);
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
       input.dataset.position = String(idx);
@@ -667,7 +724,10 @@ function createSprintWeekendCard(race) {
         updatePredictionLabelSuffix(input);
         updateDriverIconForInput(input);
       });
-      input.addEventListener("blur", () => updatePredictionLabelSuffix(input));
+      input.addEventListener("blur", () => {
+        updatePredictionLabelSuffix(input);
+        savePredictionsOnBlur(input);
+      });
       group.appendChild(l);
       group.appendChild(iconWrap);
       group.appendChild(input);
