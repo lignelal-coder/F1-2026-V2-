@@ -122,6 +122,12 @@ function getConstructorNameForDriver(code) {
   return DRIVER_TO_CONSTRUCTOR[c] || null;
 }
 
+// Icônes coupe / médaille par position (1er = or, 2e = argent, 3e = bronze)
+const POSITION_ICONS = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"]; // 🥇 🥈 🥉
+function getPositionIcon(idx) {
+  return POSITION_ICONS[idx] != null ? POSITION_ICONS[idx] + " " : "";
+}
+
 function getDriverName(code) {
   const c = (code || "").toUpperCase().trim();
   return DRIVER_NAMES[c] || code || "";
@@ -501,7 +507,7 @@ function createRaceCard(race) {
     const group = document.createElement("div");
     group.className = "race-prediction-group";
     const l = document.createElement("label");
-    l.appendChild(document.createTextNode(label + " "));
+    l.appendChild(document.createTextNode(getPositionIcon(idx) + label + " "));
     const suffix = document.createElement("span");
     suffix.className = "race-prediction-label-suffix";
     suffix.textContent = "(code pilote)";
@@ -536,10 +542,12 @@ function createRaceCard(race) {
   btn.addEventListener("click", () => {
     const player = playerSelect.value;
     const racePreds = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
-    if (!racePreds[0] && !racePreds[1] && !racePreds[2]) return;
-
     if (!state.predictions[race.id]) state.predictions[race.id] = {};
-    state.predictions[race.id][player] = racePreds;
+    if (!racePreds[0] && !racePreds[1] && !racePreds[2]) {
+      delete state.predictions[race.id][player];
+    } else {
+      state.predictions[race.id][player] = racePreds;
+    }
     saveState();
     setRaceCardLocked(wrapper, isRaceLocked(race));
     renderLeaderboard();
@@ -614,7 +622,7 @@ function createSprintWeekendCard(race) {
       const group = document.createElement("div");
       group.className = "race-prediction-group";
       const l = document.createElement("label");
-      l.appendChild(document.createTextNode(lbl + " "));
+      l.appendChild(document.createTextNode(getPositionIcon(idx) + lbl + " "));
       const suffix = document.createElement("span");
       suffix.className = "race-prediction-label-suffix";
       suffix.textContent = "(code pilote)";
@@ -653,10 +661,13 @@ function createSprintWeekendCard(race) {
     btn.addEventListener("click", () => {
       const player = playerSelect.value;
       const preds = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
-      if (!preds[0] && !preds[1] && !preds[2]) return;
       const store = state[storageKey];
       if (!store[race.id]) store[race.id] = {};
-      store[race.id][player] = preds;
+      if (!preds[0] && !preds[1] && !preds[2]) {
+        delete store[race.id][player];
+      } else {
+        store[race.id][player] = preds;
+      }
       saveState();
       if (stateKey === "predictions") setRaceCardLocked(wrapper, isRaceLocked(race));
       else setSprintPartLocked(wrapper, isRaceLocked(race));
@@ -897,7 +908,7 @@ function renderResultsComparison(race, wrap) {
       img.onerror = () => { img.style.display = "none"; };
       span.appendChild(img);
     }
-    span.appendChild(document.createTextNode(`${label} ${code}`));
+    span.appendChild(document.createTextNode(`${getPositionIcon(idx)}${label} ${code}`));
     officialParts.push(span);
   });
   officialLine.appendChild(document.createTextNode("Résultat officiel : "));
@@ -929,7 +940,7 @@ function renderResultsComparison(race, wrap) {
         img.onerror = () => { img.style.display = "none"; };
         span.appendChild(img);
       }
-      span.appendChild(document.createTextNode(`${label} ${pred} ${ok ? "✓" : "✗"}`));
+      span.appendChild(document.createTextNode(`${getPositionIcon(idx)}${label} ${pred} ${ok ? "✓" : "✗"}`));
       return span;
     });
 
@@ -1009,7 +1020,7 @@ function renderAdminResults() {
     ["1er", "2e", "3e"].forEach((label, idx) => {
       const group = document.createElement("div");
       const l = document.createElement("label");
-      l.textContent = label + " (code pilote)";
+      l.textContent = getPositionIcon(idx) + label + " (code pilote)";
 
       const input = document.createElement("input");
       input.placeholder = idx === 0 ? "ex: VER" : idx === 1 ? "ex: HAM" : "ex: LEC";
@@ -1090,7 +1101,7 @@ function renderAdminResults() {
       ["1er", "2e", "3e"].forEach((label, idx) => {
         const group = document.createElement("div");
         const l = document.createElement("label");
-        l.textContent = label + " (code pilote)";
+        l.textContent = getPositionIcon(idx) + label + " (code pilote)";
         const input = document.createElement("input");
         input.placeholder = idx === 0 ? "ex: VER" : "ex: HAM";
         group.appendChild(l);
@@ -1152,7 +1163,7 @@ function renderSeasonPredictions() {
       const group = document.createElement("div");
       group.className = "season-form-group";
       const l = document.createElement("label");
-      l.textContent = label;
+      l.textContent = getPositionIcon(idx) + label;
       group.appendChild(l);
       const inputWrap = document.createElement("div");
       inputWrap.className = "season-input-wrap";
@@ -1192,7 +1203,6 @@ function renderSeasonPredictions() {
     const currentPlayer = playerSelect.value;
     const d = driverInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
     const c = constructorInputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
-    if (!d[0] && !d[1] && !d[2] && !c[0] && !c[1] && !c[2]) return;
     state.seasonPredictions[currentPlayer] = { drivers: d, constructors: c };
     saveState();
     driverInputs.forEach((input) => {
