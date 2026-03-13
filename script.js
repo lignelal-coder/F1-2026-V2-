@@ -348,6 +348,7 @@ function getStorageKey() {
 }
 
 let state = loadState();
+let remotePollInterval = null;
 
 function loadState() {
   try {
@@ -457,8 +458,8 @@ function scoreRaceForPlayer(raceId, player) {
   const real = state.results[raceId];
   if (!preds || !real) return 0;
   let pts = 0;
-  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 1;
-  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 1;
+  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 3;
+  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 2;
   if (preds[2] && preds[2].toUpperCase() === real[2]?.toUpperCase()) pts += 1;
   return pts;
 }
@@ -468,8 +469,8 @@ function scoreSprintForPlayer(raceId, player) {
   const real = state.sprintResults[raceId];
   if (!preds || !real) return 0;
   let pts = 0;
-  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 1;
-  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 1;
+  if (preds[0] && preds[0].toUpperCase() === real[0]?.toUpperCase()) pts += 3;
+  if (preds[1] && preds[1].toUpperCase() === real[1]?.toUpperCase()) pts += 2;
   if (preds[2] && preds[2].toUpperCase() === real[2]?.toUpperCase()) pts += 1;
   return pts;
 }
@@ -501,6 +502,7 @@ const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 const seasonYearBadge = document.getElementById("seasonYearBadge");
 const driversGridEl = document.getElementById("driversGrid");
+const roomCodeBadge = document.getElementById("roomCodeBadge");
 const roomSection = document.getElementById("roomSection");
 const createRoomBtn = document.getElementById("createRoomBtn");
 const createdRoomCodeWrap = document.getElementById("createdRoomCodeWrap");
@@ -513,6 +515,17 @@ const joinRoomErrorEl = document.getElementById("joinRoomError");
 function updateSeasonYearBadge() {
   if (seasonYearBadge) {
     seasonYearBadge.textContent = "Saison " + SEASON_YEAR + (SEASON_YEAR === 2025 ? " (essai)" : "");
+  }
+}
+
+function updateRoomCodeBadge() {
+  if (!roomCodeBadge) return;
+  if (state.roomCode) {
+    roomCodeBadge.textContent = "Partie " + state.roomCode;
+    roomCodeBadge.style.display = "inline-flex";
+  } else {
+    roomCodeBadge.textContent = "";
+    roomCodeBadge.style.display = "none";
   }
 }
 
@@ -547,6 +560,7 @@ function updateVisibility() {
   if (headerWhenLocked) headerWhenLocked.style.display = locked ? "flex" : "none";
   if (headerWhenUnlocked) headerWhenUnlocked.style.display = hasRoom && !locked ? "block" : "none";
   if (locked && lockedProfileName) lockedProfileName.textContent = state.lockedProfile;
+  updateRoomCodeBadge();
 }
 
 function renderProfileChoice() {
@@ -708,6 +722,42 @@ async function setRoomCode(code) {
   saveState();
   updateVisibility();
   renderProfileChoice();
+}
+
+function startRemotePolling() {
+  if (!REMOTE_STATE_ENABLED) return;
+  if (remotePollInterval) {
+    clearInterval(remotePollInterval);
+    remotePollInterval = null;
+  }
+  if (!state.roomCode) return;
+
+  remotePollInterval = setInterval(async () => {
+    try {
+      const remote = await fetchRemoteState();
+      if (!remote) return;
+      const currentLocked = state.lockedProfile;
+      const currentActive = state.activePlayer;
+      const currentRoom = state.roomCode;
+
+      state = {
+        ...state,
+        ...remote,
+        roomCode: currentRoom,
+        lockedProfile: currentLocked,
+        activePlayer: currentActive,
+        players: remote.players || state.players
+      };
+      saveState();
+      if (state.lockedProfile) {
+        renderAll();
+      } else if (state.roomCode) {
+        renderProfileChoice();
+      }
+    } catch (e) {
+      console.error("Erreur lors du rafraîchissement distant", e);
+    }
+  }, 10000); // toutes les 10 secondes
 }
 
 function initRoomSection() {
@@ -1632,4 +1682,7 @@ if (state.roomCode) {
     }
   }
 })();
+
+// Démarre un rafraîchissement régulier de l'état distant (temps quasi réel entre appareils)
+startRemotePolling();
 
