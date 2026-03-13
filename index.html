@@ -35,6 +35,31 @@
       </div>
     </header>
 
+    <section id="roomSection" class="card room-choice">
+      <h2>Choisir une partie</h2>
+      <p class="hint">
+        Crée une partie avec un code à partager à tes amis, ou rejoins une partie existante avec le code qu’on t’a donné.
+      </p>
+      <div class="room-choice-grid">
+        <div class="room-panel">
+          <h3>Créer une partie</h3>
+          <button id="createRoomBtn" type="button">Créer un code de partie</button>
+          <p id="createdRoomCodeWrap" class="room-created" style="display: none;">
+            Code de partie : <strong id="createdRoomCode"></strong><br />
+            Lien à partager : <span id="createdRoomLink" class="room-link"></span>
+          </p>
+        </div>
+        <div class="room-panel">
+          <h3>Rejoindre une partie</h3>
+          <div class="room-join-form">
+            <input id="joinRoomInput" type="text" placeholder="Code de partie (ex : ABC123)" />
+            <button id="joinRoomBtn" type="button">Rejoindre</button>
+          </div>
+          <p id="joinRoomError" class="room-error" style="display:none;"></p>
+        </div>
+      </div>
+    </section>
+
     <section id="profileChoiceSection" class="card profile-choice">
       <h2>Qui es-tu ?</h2>
       <p class="hint">Chaque participant ne peut modifier que ses propres prédictions. Choisis ton profil pour continuer.</p>

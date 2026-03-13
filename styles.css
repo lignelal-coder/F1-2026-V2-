@@ -261,6 +261,66 @@ body {
   max-width: 480px;
 }
 
+.room-choice {
+  margin: 18px 22px 0;
+  max-width: 640px;
+}
+
+.room-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+@media (max-width: 720px) {
+  .room-choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.room-panel {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.room-panel h3 {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+.room-join-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.room-join-form input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text);
+}
+
+.room-created {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.room-link {
+  word-break: break-all;
+}
+
+.room-error {
+  font-size: 12px;
+  color: #f97373;
+}
+
 .profile-choice-list {
   display: flex;
   flex-direction: column;

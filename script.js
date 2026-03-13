@@ -355,6 +355,7 @@ function loadState() {
     if (!raw) {
       const players = getAllAccountPlayerNames();
       return {
+        roomCode: null,
         predictions: {},
         results: {},
         sprintPredictions: {},
@@ -366,6 +367,7 @@ function loadState() {
       };
     }
     const parsed = JSON.parse(raw);
+    const roomCode = parsed.roomCode || null;
     const playersFromAccounts = getAllAccountPlayerNames();
     const players = playersFromAccounts;
     const activePlayer = parsed.activePlayer && players.includes(parsed.activePlayer) ? parsed.activePlayer : players[0];
@@ -376,6 +378,7 @@ function loadState() {
       sprintPredictions: parsed.sprintPredictions || {},
       sprintResults: parsed.sprintResults || {},
       seasonPredictions: parsed.seasonPredictions || {},
+      roomCode,
       players,
       activePlayer,
       lockedProfile
@@ -384,6 +387,7 @@ function loadState() {
     console.error("Erreur de chargement du state", e);
     const players = getAllAccountPlayerNames();
     return {
+      roomCode: null,
       predictions: {},
       results: {},
       sprintPredictions: {},
@@ -399,7 +403,9 @@ function loadState() {
 async function fetchRemoteState() {
   if (!REMOTE_STATE_ENABLED || !REMOTE_STATE_URL || !REMOTE_STATE_API_KEY) return null;
   try {
-    const url = `${REMOTE_STATE_URL}?id=eq.${encodeURIComponent(REMOTE_STATE_ROW_ID)}&select=payload`;
+    const roomId = (state.roomCode || REMOTE_STATE_ROW_ID || "").trim();
+    if (!roomId) return null;
+    const url = `${REMOTE_STATE_URL}?id=eq.${encodeURIComponent(roomId)}&select=payload`;
     const res = await fetch(url, {
       headers: {
         apikey: REMOTE_STATE_API_KEY,
@@ -420,7 +426,9 @@ async function fetchRemoteState() {
 async function pushRemoteState() {
   if (!REMOTE_STATE_ENABLED || !REMOTE_STATE_URL || !REMOTE_STATE_API_KEY) return;
   try {
-    const body = JSON.stringify([{ id: REMOTE_STATE_ROW_ID, payload: state }]);
+    const roomId = (state.roomCode || REMOTE_STATE_ROW_ID || "").trim();
+    if (!roomId) return;
+    const body = JSON.stringify([{ id: roomId, payload: state }]);
     await fetch(REMOTE_STATE_URL, {
       method: "POST",
       headers: {
@@ -493,6 +501,14 @@ const leaderboardTableBody = document.querySelector("#leaderboardTable tbody");
 const resultsAdminEl = document.getElementById("resultsAdmin");
 const seasonYearBadge = document.getElementById("seasonYearBadge");
 const driversGridEl = document.getElementById("driversGrid");
+const roomSection = document.getElementById("roomSection");
+const createRoomBtn = document.getElementById("createRoomBtn");
+const createdRoomCodeWrap = document.getElementById("createdRoomCodeWrap");
+const createdRoomCodeEl = document.getElementById("createdRoomCode");
+const createdRoomLinkEl = document.getElementById("createdRoomLink");
+const joinRoomInput = document.getElementById("joinRoomInput");
+const joinRoomBtn = document.getElementById("joinRoomBtn");
+const joinRoomErrorEl = document.getElementById("joinRoomError");
 
 function updateSeasonYearBadge() {
   if (seasonYearBadge) {
@@ -523,11 +539,13 @@ function renderDriversGrid() {
 }
 
 function updateVisibility() {
+  const hasRoom = !!state.roomCode;
   const locked = !!state.lockedProfile;
-  if (profileChoiceSection) profileChoiceSection.style.display = locked ? "none" : "block";
-  if (mainContent) mainContent.style.display = locked ? "grid" : "none";
+  if (roomSection) roomSection.style.display = hasRoom ? "none" : "block";
+  if (profileChoiceSection) profileChoiceSection.style.display = hasRoom && !locked ? "block" : "none";
+  if (mainContent) mainContent.style.display = hasRoom && locked ? "grid" : "none";
   if (headerWhenLocked) headerWhenLocked.style.display = locked ? "flex" : "none";
-  if (headerWhenUnlocked) headerWhenUnlocked.style.display = locked ? "none" : "block";
+  if (headerWhenUnlocked) headerWhenUnlocked.style.display = hasRoom && !locked ? "block" : "none";
   if (locked && lockedProfileName) lockedProfileName.textContent = state.lockedProfile;
 }
 
@@ -643,6 +661,99 @@ function initPlayerSelect() {
   // Désactiver la création libre de joueurs dans le mode comptes simples.
   if (addPlayerBtn) addPlayerBtn.style.display = "none";
   if (newPlayerInput) newPlayerInput.style.display = "none";
+}
+
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function setRoomCode(code) {
+  state.roomCode = code.toUpperCase();
+  state.lockedProfile = null; // nouvelle partie → on force le choix / login du joueur
+
+  // Si une synchro distante est active, on essaie de charger l'état existant de cette partie
+  if (REMOTE_STATE_ENABLED) {
+    const remote = await fetchRemoteState();
+    if (remote) {
+      state = {
+        ...state,
+        ...remote,
+        roomCode: state.roomCode,
+        players: remote.players || state.players,
+        activePlayer: remote.activePlayer || state.activePlayer,
+        lockedProfile: null
+      };
+    } else {
+      // Nouvelle partie : on repart sur un state vide pour les pronos/résultats
+      state.predictions = {};
+      state.results = {};
+      state.sprintPredictions = {};
+      state.sprintResults = {};
+      state.seasonPredictions = {};
+    }
+  } else {
+    // Sans backend, on isole quand même la partie côté local
+    state.predictions = {};
+    state.results = {};
+    state.sprintPredictions = {};
+    state.sprintResults = {};
+    state.seasonPredictions = {};
+  }
+
+  saveState();
+  updateVisibility();
+  renderProfileChoice();
+}
+
+function initRoomSection() {
+  if (!roomSection) return;
+
+  // Si un code de room est déjà présent dans l'URL, on le prend en priorité
+  try {
+    const url = new URL(window.location.href);
+    const roomFromUrl = url.searchParams.get("room");
+    if (roomFromUrl && !state.roomCode) {
+      state.roomCode = roomFromUrl.toUpperCase();
+      saveState();
+    }
+  } catch (_) {}
+
+  if (createRoomBtn) {
+    createRoomBtn.addEventListener("click", () => {
+      const code = generateRoomCode();
+      setRoomCode(code);
+      if (createdRoomCodeEl) createdRoomCodeEl.textContent = code;
+      if (createdRoomLinkEl) {
+        const base = window.location.origin + window.location.pathname;
+        createdRoomLinkEl.textContent = `${base}?room=${code}`;
+      }
+      if (createdRoomCodeWrap) createdRoomCodeWrap.style.display = "block";
+    });
+  }
+
+  if (joinRoomBtn && joinRoomInput) {
+    const doJoin = () => {
+      const raw = (joinRoomInput.value || "").trim().toUpperCase();
+      if (!raw) {
+        if (joinRoomErrorEl) {
+          joinRoomErrorEl.textContent = "Merci de saisir un code de partie.";
+          joinRoomErrorEl.style.display = "block";
+        }
+        return;
+      }
+      setRoomCode(raw);
+      if (joinRoomErrorEl) joinRoomErrorEl.style.display = "none";
+    };
+    joinRoomBtn.addEventListener("click", doJoin);
+    joinRoomInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doJoin();
+    });
+  }
 }
 
 function createRaceCard(race) {
@@ -1472,18 +1583,21 @@ function renderAll() {
 }
 
 initPlayerSelect();
+initRoomSection();
 updateSeasonYearBadge();
 updateVisibility();
-if (state.lockedProfile) {
-  refreshPlayerSelectUI();
-  updateProfileLabels();
-  renderRaces();
-  renderSeasonPredictions();
-  renderAdminResults();
-  renderLeaderboard();
-  renderDriversGrid();
-} else {
-  renderProfileChoice();
+if (state.roomCode) {
+  if (state.lockedProfile) {
+    refreshPlayerSelectUI();
+    updateProfileLabels();
+    renderRaces();
+    renderSeasonPredictions();
+    renderAdminResults();
+    renderLeaderboard();
+    renderDriversGrid();
+  } else {
+    renderProfileChoice();
+  }
 }
 
 // Si une synchro distante est configurée (Supabase), on récupère le state partagé
@@ -1497,22 +1611,25 @@ if (state.lockedProfile) {
     ...remote,
     players: remote.players || state.players,
     activePlayer: remote.activePlayer || state.activePlayer,
-    lockedProfile: remote.lockedProfile || state.lockedProfile
+    lockedProfile: remote.lockedProfile || state.lockedProfile,
+    roomCode: remote.roomCode || state.roomCode
   };
   saveState(); // met à jour le localStorage
 
   // Re-render complet avec le state partagé
-  if (state.lockedProfile) {
-    refreshPlayerSelectUI();
-    updateProfileLabels();
-    renderRaces();
-    renderSeasonPredictions();
-    renderAdminResults();
-    renderLeaderboard();
-    renderDriversGrid();
-  } else {
-    updateVisibility();
-    renderProfileChoice();
+  updateVisibility();
+  if (state.roomCode) {
+    if (state.lockedProfile) {
+      refreshPlayerSelectUI();
+      updateProfileLabels();
+      renderRaces();
+      renderSeasonPredictions();
+      renderAdminResults();
+      renderLeaderboard();
+      renderDriversGrid();
+    } else {
+      renderProfileChoice();
+    }
   }
 })();
 
