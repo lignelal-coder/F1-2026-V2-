@@ -59,6 +59,25 @@ const RACES_2026 = [
 
 const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
 
+// Comptes simples (Option B) : login + mot de passe en clair côté front.
+// Login accepté = soit la clé (allan, alexandre, matheo), soit le nom exact (Allan, ...).
+const SIMPLE_ACCOUNTS = {
+  allan:    { name: "Allan",     password: "allan26" },
+  alexandre:{ name: "Alexandre", password: "alex26" },
+  matheo:   { name: "Mathéo",    password: "mat26" }
+};
+
+function getAllAccountPlayerNames() {
+  return Object.values(SIMPLE_ACCOUNTS).map((a) => a.name);
+}
+
+function findAccountByLogin(login) {
+  const l = (login || "").trim().toLowerCase();
+  if (!l) return null;
+  if (SIMPLE_ACCOUNTS[l]) return SIMPLE_ACCOUNTS[l];
+  return Object.values(SIMPLE_ACCOUNTS).find((a) => a.name.trim().toLowerCase() === l) || null;
+}
+
 // --- Sync distante (optionnelle) pour partager les scores entre appareils ---
 // Si tu veux activer la synchro Supabase, remplis ces constantes :
 // - REMOTE_STATE_ENABLED = true
@@ -334,19 +353,21 @@ function loadState() {
   try {
     const raw = localStorage.getItem(getStorageKey());
     if (!raw) {
+      const players = getAllAccountPlayerNames();
       return {
         predictions: {},
         results: {},
         sprintPredictions: {},
         sprintResults: {},
         seasonPredictions: {},
-        players: [...DEFAULT_PLAYERS],
-        activePlayer: DEFAULT_PLAYERS[0],
+        players,
+        activePlayer: players[0],
         lockedProfile: null
       };
     }
     const parsed = JSON.parse(raw);
-    const players = Array.isArray(parsed.players) && parsed.players.length ? parsed.players : [...DEFAULT_PLAYERS];
+    const playersFromAccounts = getAllAccountPlayerNames();
+    const players = playersFromAccounts;
     const activePlayer = parsed.activePlayer && players.includes(parsed.activePlayer) ? parsed.activePlayer : players[0];
     const lockedProfile = parsed.lockedProfile && players.includes(parsed.lockedProfile) ? parsed.lockedProfile : null;
     return {
@@ -361,14 +382,15 @@ function loadState() {
     };
   } catch (e) {
     console.error("Erreur de chargement du state", e);
+    const players = getAllAccountPlayerNames();
     return {
       predictions: {},
       results: {},
       sprintPredictions: {},
       sprintResults: {},
       seasonPredictions: {},
-      players: [...DEFAULT_PLAYERS],
-      activePlayer: DEFAULT_PLAYERS[0],
+      players,
+      activePlayer: players[0],
       lockedProfile: null
     };
   }
@@ -512,42 +534,61 @@ function updateVisibility() {
 function renderProfileChoice() {
   if (!profileChoiceList) return;
   profileChoiceList.innerHTML = "";
-  state.players.forEach((name) => {
-    const wrap = document.createElement("div");
-    wrap.className = "profile-choice-item";
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn-its-me";
-    btn.textContent = "C'est moi (" + name + ")";
-    btn.addEventListener("click", () => {
-      state.lockedProfile = name;
-      state.activePlayer = name;
-      saveState();
-      refreshPlayerSelectUI();
-      updateVisibility();
-      renderAll();
-    });
-    wrap.appendChild(btn);
-    if (state.players.length > 1) {
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "btn-remove-profile";
-      delBtn.textContent = "Supprimer";
-      delBtn.title = "Supprimer ce profil";
-      delBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        state.players = state.players.filter((p) => p !== name);
-        Object.keys(state.predictions).forEach((raceId) => delete state.predictions[raceId][name]);
-        delete state.seasonPredictions[name];
-        if (state.lockedProfile === name) state.lockedProfile = null;
-        if (state.activePlayer === name) state.activePlayer = state.players[0];
-        saveState();
-        renderProfileChoice();
-      });
-      wrap.appendChild(delBtn);
+
+  const form = document.createElement("div");
+  form.className = "profile-login-form";
+
+  const loginLabel = document.createElement("label");
+  loginLabel.textContent = "Identifiant (Allan, Alexandre, Mathéo)";
+  const loginInput = document.createElement("input");
+  loginInput.type = "text";
+  loginInput.placeholder = "ex : Allan";
+
+  const passLabel = document.createElement("label");
+  passLabel.textContent = "Mot de passe";
+  const passInput = document.createElement("input");
+  passInput.type = "password";
+  passInput.placeholder = "mot de passe";
+
+  const error = document.createElement("p");
+  error.className = "profile-login-error";
+  error.style.display = "none";
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-its-me";
+  btn.textContent = "Se connecter";
+
+  function tryLogin() {
+    const acc = findAccountByLogin(loginInput.value);
+    if (!acc || passInput.value !== acc.password) {
+      error.textContent = "Identifiant ou mot de passe incorrect.";
+      error.style.display = "block";
+      return;
     }
-    profileChoiceList.appendChild(wrap);
+    state.lockedProfile = acc.name;
+    state.activePlayer = acc.name;
+    // Forcer la liste des joueurs à correspondre aux comptes simples
+    state.players = getAllAccountPlayerNames();
+    saveState();
+    refreshPlayerSelectUI();
+    updateVisibility();
+    renderAll();
+  }
+
+  btn.addEventListener("click", tryLogin);
+  passInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryLogin();
   });
+
+  form.appendChild(loginLabel);
+  form.appendChild(loginInput);
+  form.appendChild(passLabel);
+  form.appendChild(passInput);
+  form.appendChild(btn);
+  form.appendChild(error);
+
+  profileChoiceList.appendChild(form);
 }
 
 function updateProfileLabels() {
@@ -566,24 +607,11 @@ function refreshPlayerSelectUI() {
     playerSelect.appendChild(opt);
   });
   playerSelect.value = state.lockedProfile || state.activePlayer || state.players[0];
-  if (removePlayerBtn) removePlayerBtn.disabled = state.players.length <= 1;
+  if (removePlayerBtn) removePlayerBtn.disabled = true;
 }
 
 function removeCurrentPlayer() {
-  if (state.players.length <= 1) return;
-  const toRemove = playerSelect.value;
-  state.players = state.players.filter((p) => p !== toRemove);
-  Object.keys(state.predictions).forEach((raceId) => {
-    delete state.predictions[raceId][toRemove];
-  });
-  delete state.seasonPredictions[toRemove];
-  if (state.lockedProfile === toRemove) state.lockedProfile = null;
-  if (state.activePlayer === toRemove) state.activePlayer = state.players[0];
-  saveState();
-  refreshPlayerSelectUI();
-  updateVisibility();
-  if (state.lockedProfile) renderAll();
-  else renderProfileChoice();
+  // Désactivé dans le mode comptes simples.
 }
 
 function initPlayerSelect() {
@@ -598,7 +626,10 @@ function initPlayerSelect() {
     });
   }
 
-  if (removePlayerBtn) removePlayerBtn.addEventListener("click", removeCurrentPlayer);
+  if (removePlayerBtn) {
+    removePlayerBtn.disabled = true;
+    removePlayerBtn.style.display = "none";
+  }
 
   if (unlockProfileBtn) {
     unlockProfileBtn.addEventListener("click", () => {
@@ -609,31 +640,9 @@ function initPlayerSelect() {
     });
   }
 
-  if (addPlayerBtn && newPlayerInput) {
-    addPlayerBtn.addEventListener("click", () => {
-      const raw = newPlayerInput.value.trim();
-      if (!raw) return;
-      const name = raw;
-      if (state.players.includes(name)) {
-        state.activePlayer = name;
-        saveState();
-        refreshPlayerSelectUI();
-        renderProfileChoice();
-        newPlayerInput.value = "";
-        return;
-      }
-      state.players.push(name);
-      state.activePlayer = name;
-      saveState();
-      refreshPlayerSelectUI();
-      renderProfileChoice();
-      newPlayerInput.value = "";
-    });
-
-    newPlayerInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addPlayerBtn.click();
-    });
-  }
+  // Désactiver la création libre de joueurs dans le mode comptes simples.
+  if (addPlayerBtn) addPlayerBtn.style.display = "none";
+  if (newPlayerInput) newPlayerInput.style.display = "none";
 }
 
 function createRaceCard(race) {
