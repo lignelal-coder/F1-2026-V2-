@@ -59,6 +59,18 @@ const RACES_2026 = [
 
 const RACES = SEASON_YEAR === 2025 ? RACES_2025 : RACES_2026;
 
+// --- Sync distante (optionnelle) pour partager les scores entre appareils ---
+// Si tu veux activer la synchro Supabase, remplis ces constantes :
+// - REMOTE_STATE_ENABLED = true
+// - REMOTE_STATE_URL = "https://TON_PROJET.supabase.co/rest/v1/f1_state"
+// - REMOTE_STATE_API_KEY = "clé anonyme Supabase (anon key)"
+// et crée la table décrite dans le README.
+const REMOTE_STATE_ENABLED = true;
+const REMOTE_STATE_URL = "https://edcwdipuzqcqqfujzwrl.supabase.co/rest/v1/f1_state";
+// ⚠️ IMPORTANT : remplace cette chaîne par ta vraie clé publiable Supabase (celle qui commence par sb-publishable_)
+const REMOTE_STATE_API_KEY = "sb_publishable_uIRP0fiR-jxkWJhAQ8FCIA_Sc2cdcSE";
+const REMOTE_STATE_ROW_ID = "main";
+
 // Images des tracés de circuits (cartes détaillées par GP)
 const TRACK_IMAGES = {
   aus: "assets/img/tracks/track-aus.png", chn: "assets/img/tracks/track-chn.png",
@@ -294,8 +306,52 @@ function loadState() {
   }
 }
 
+async function fetchRemoteState() {
+  if (!REMOTE_STATE_ENABLED || !REMOTE_STATE_URL || !REMOTE_STATE_API_KEY) return null;
+  try {
+    const url = `${REMOTE_STATE_URL}?id=eq.${encodeURIComponent(REMOTE_STATE_ROW_ID)}&select=payload`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: REMOTE_STATE_API_KEY,
+        Authorization: `Bearer ${REMOTE_STATE_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    if (!rows || !rows[0] || !rows[0].payload) return null;
+    return rows[0].payload;
+  } catch (e) {
+    console.error("Erreur de récupération du state distant", e);
+    return null;
+  }
+}
+
+async function pushRemoteState() {
+  if (!REMOTE_STATE_ENABLED || !REMOTE_STATE_URL || !REMOTE_STATE_API_KEY) return;
+  try {
+    const body = JSON.stringify([{ id: REMOTE_STATE_ROW_ID, payload: state }]);
+    await fetch(REMOTE_STATE_URL, {
+      method: "POST",
+      headers: {
+        apikey: REMOTE_STATE_API_KEY,
+        Authorization: `Bearer ${REMOTE_STATE_API_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates"
+      },
+      body
+    });
+  } catch (e) {
+    console.error("Erreur de sauvegarde du state distant", e);
+  }
+}
+
 function saveState() {
   localStorage.setItem(getStorageKey(), JSON.stringify(state));
+  // Sauvegarde distante best-effort (async, sans bloquer l'UI)
+  if (REMOTE_STATE_ENABLED) {
+    pushRemoteState();
+  }
 }
 
 function scoreRaceForPlayer(raceId, player) {
@@ -930,14 +986,8 @@ function fetchRaceResultsFromAPI(round, year) {
       .catch(() => tryFetch(i + 1));
   }
 
-  return fetch(url, { mode: "cors" })
-    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Réseau"))))
-    .then((data) => {
-      const top3 = parseResponse(data);
-      if (top3) return top3;
-      throw new Error("Aucun résultat");
-    })
-    .catch(() => tryFetch(0));
+  // Utilise uniquement les proxys CORS pour fiabiliser l'appel depuis le navigateur.
+  return tryFetch(0);
 }
 
 function renderResultsComparison(race, wrap) {
@@ -1328,4 +1378,34 @@ if (state.lockedProfile) {
 } else {
   renderProfileChoice();
 }
+
+// Si une synchro distante est configurée (Supabase), on récupère le state partagé
+// après l'initialisation locale, puis on re-render l'UI.
+(async () => {
+  if (!REMOTE_STATE_ENABLED) return;
+  const remote = await fetchRemoteState();
+  if (!remote) return;
+  state = {
+    ...state,
+    ...remote,
+    players: remote.players || state.players,
+    activePlayer: remote.activePlayer || state.activePlayer,
+    lockedProfile: remote.lockedProfile || state.lockedProfile
+  };
+  saveState(); // met à jour le localStorage
+
+  // Re-render complet avec le state partagé
+  if (state.lockedProfile) {
+    refreshPlayerSelectUI();
+    updateProfileLabels();
+    renderRaces();
+    renderSeasonPredictions();
+    renderAdminResults();
+    renderLeaderboard();
+    renderDriversGrid();
+  } else {
+    updateVisibility();
+    renderProfileChoice();
+  }
+})();
 
