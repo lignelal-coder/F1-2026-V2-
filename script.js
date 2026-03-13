@@ -211,14 +211,20 @@ function getConstructorIconSrc(name) {
   return CONSTRUCTOR_ICONS[n] || CONSTRUCTOR_ICONS[name?.toUpperCase().replace(/\s+/g, "")] || null;
 }
 
-/** Verrouille à partir du jour du GP : on peut modifier jusqu'à la veille (inclus). */
+/** Verrouille à partir de la veille du GP :
+ * - avant J-1 (strictement) : on peut modifier librement ses prédictions
+ * - à partir de J-1 : on ne peut plus modifier une prédiction déjà enregistrée,
+ *   mais on peut encore saisir une première prédiction si on n'en avait pas.
+ */
 function isRaceLocked(race) {
   if (!race || !race.date) return false;
   const raceDay = new Date(race.date);
   raceDay.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return today >= raceDay;
+  const lockDay = new Date(raceDay);
+  lockDay.setDate(lockDay.getDate() - 1);
+  return today >= lockDay;
 }
 
 /** Sauvegarde automatique des prédictions quand on quitte un champ (blur) pour que le refresh garde les modifs. */
@@ -254,6 +260,68 @@ function savePredictionsOnBlur(input) {
     }
   }
   renderLeaderboard();
+  renderRaceOthersForCard(card);
+}
+
+function renderOtherPredictionsForRace(raceId, listEl, isSprint) {
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  const store = isSprint ? state.sprintPredictions : state.predictions;
+  const byPlayer = store[raceId] || {};
+  const any = state.players.some((p) => {
+    const arr = byPlayer[p];
+    return arr && (arr[0] || arr[1] || arr[2]);
+  });
+  if (!any) {
+    const hint = document.createElement("div");
+    hint.className = "race-others-empty";
+    hint.textContent = "Aucune prédiction enregistrée pour l’instant.";
+    listEl.appendChild(hint);
+    return;
+  }
+  state.players.forEach((player) => {
+    const arr = byPlayer[player];
+    if (!arr || (!arr[0] && !arr[1] && !arr[2])) return;
+    const row = document.createElement("div");
+    row.className = "race-others-row";
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "race-others-player";
+    nameSpan.textContent = player + " :";
+    row.appendChild(nameSpan);
+    ["1er", "2e", "3e"].forEach((label, idx) => {
+      const code = (arr[idx] || "—").toUpperCase();
+      const posSpan = document.createElement("span");
+      posSpan.className = "race-others-pos";
+      const iconSrc = code !== "—" ? getDriverIconSrc(code) : null;
+      if (iconSrc) {
+        const img = document.createElement("img");
+        img.src = iconSrc;
+        img.alt = code;
+        img.className = "race-others-driver-icon";
+        img.onerror = () => { img.style.display = "none"; };
+        posSpan.appendChild(img);
+      }
+      const text = document.createElement("span");
+      text.textContent = `${getPositionIcon(idx)}${code}`;
+      posSpan.appendChild(text);
+      row.appendChild(posSpan);
+    });
+    listEl.appendChild(row);
+  });
+}
+
+function renderRaceOthersForCard(cardEl) {
+  if (!cardEl || !cardEl._raceId) return;
+  const raceId = cardEl._raceId;
+  if (cardEl._othersList) {
+    renderOtherPredictionsForRace(raceId, cardEl._othersList, false);
+  }
+  if (cardEl._othersCourseList) {
+    renderOtherPredictionsForRace(raceId, cardEl._othersCourseList, false);
+  }
+  if (cardEl._othersSprintList) {
+    renderOtherPredictionsForRace(raceId, cardEl._othersSprintList, true);
+  }
 }
 
 function getStorageKey() {
@@ -678,6 +746,7 @@ function createRaceCard(race) {
     saveState();
     setRaceCardLocked(wrapper, isRaceLocked(race));
     renderLeaderboard();
+    renderRaceOthersForCard(wrapper);
   });
 
   const tag = document.createElement("span");
@@ -690,11 +759,24 @@ function createRaceCard(race) {
   wrapper.appendChild(header);
   wrapper.appendChild(form);
 
+   // Bloc lecture seule : prédictions des autres participants pour ce GP
+  const others = document.createElement("div");
+  others.className = "race-others";
+  const othersTitle = document.createElement("div");
+  othersTitle.className = "race-others-title";
+  othersTitle.textContent = "Prédictions des participants";
+  const othersList = document.createElement("div");
+  othersList.className = "race-others-list";
+  others.appendChild(othersTitle);
+  others.appendChild(othersList);
+  wrapper.appendChild(others);
+
   wrapper._pointsTag = tag;
   wrapper._inputs = inputs;
   wrapper._saveBtn = btn;
   wrapper._raceId = race.id;
   wrapper._race = race;
+  wrapper._othersList = othersList;
 
   return wrapper;
 }
@@ -799,6 +881,18 @@ function createSprintWeekendCard(race) {
     form.appendChild(btn);
     form.appendChild(tag);
     col.appendChild(form);
+
+    // Bloc lecture seule : prédictions des participants pour cette partie (course / sprint)
+    const others = document.createElement("div");
+    others.className = "race-others";
+    const othersTitle = document.createElement("div");
+    othersTitle.className = "race-others-title";
+    othersTitle.textContent = label + " — autres participants";
+    const othersList = document.createElement("div");
+    othersList.className = "race-others-list";
+    others.appendChild(othersTitle);
+    others.appendChild(othersList);
+    col.appendChild(others);
     btn.addEventListener("click", () => {
       const player = playerSelect.value;
       const preds = inputs.map((i) => i.value.trim().toUpperCase()).slice(0, 3);
@@ -813,8 +907,9 @@ function createSprintWeekendCard(race) {
       if (stateKey === "predictions") setRaceCardLocked(wrapper, isRaceLocked(race));
       else setSprintPartLocked(wrapper, isRaceLocked(race));
       renderLeaderboard();
+      renderRaceOthersForCard(wrapper);
     });
-    return { col, inputs, btn, tag };
+    return { col, inputs, btn, tag, othersList };
   }
 
   const coursePart = makeForm("Course (dimanche)", "predictions", "predictions");
@@ -831,6 +926,8 @@ function createSprintWeekendCard(race) {
   wrapper._sprintInputs = sprintPart.inputs;
   wrapper._sprintPointsTag = sprintPart.tag;
   wrapper._sprintSaveBtn = sprintPart.btn;
+  wrapper._othersCourseList = coursePart.othersList;
+  wrapper._othersSprintList = sprintPart.othersList;
   return wrapper;
 }
 
@@ -929,6 +1026,7 @@ function fillExistingPredictionsAndScores() {
       const pts = scoreRaceForPlayer(raceId, player);
       tag.textContent = `Points actuels : ${pts}`;
     }
+    renderRaceOthersForCard(el);
   });
 }
 

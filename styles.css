@@ -700,6 +700,61 @@ select {
   flex-shrink: 0;
 }
 
+.race-others {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.race-others-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.race-others-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.race-others-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.race-others-player {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.race-others-pos {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border);
+}
+
+.race-others-driver-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.race-others-empty {
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .race-form label {
   font-size: 12px;
   color: var(--muted);
