@@ -503,6 +503,7 @@ const resultsAdminEl = document.getElementById("resultsAdmin");
 const seasonYearBadge = document.getElementById("seasonYearBadge");
 const driversGridEl = document.getElementById("driversGrid");
 const roomCodeBadge = document.getElementById("roomCodeBadge");
+const leaveRoomBtn = document.getElementById("leaveRoomBtn");
 const roomSection = document.getElementById("roomSection");
 const createRoomBtn = document.getElementById("createRoomBtn");
 const createdRoomCodeWrap = document.getElementById("createdRoomCodeWrap");
@@ -554,11 +555,13 @@ function renderDriversGrid() {
 function updateVisibility() {
   const hasRoom = !!state.roomCode;
   const locked = !!state.lockedProfile;
-  if (roomSection) roomSection.style.display = hasRoom ? "none" : "block";
-  if (profileChoiceSection) profileChoiceSection.style.display = hasRoom && !locked ? "block" : "none";
-  if (mainContent) mainContent.style.display = hasRoom && locked ? "grid" : "none";
+  // On n'utilise plus roomSection pour l'instant
+  if (roomSection) roomSection.style.display = "none";
+  // Écran "Qui es-tu ? / choix de partie" visible tant que la partie n'est pas complètement choisie
+  if (profileChoiceSection) profileChoiceSection.style.display = locked && hasRoom ? "none" : "block";
+  if (mainContent) mainContent.style.display = locked && hasRoom ? "grid" : "none";
   if (headerWhenLocked) headerWhenLocked.style.display = locked ? "flex" : "none";
-  if (headerWhenUnlocked) headerWhenUnlocked.style.display = hasRoom && !locked ? "block" : "none";
+  if (headerWhenUnlocked) headerWhenUnlocked.style.display = !locked ? "block" : "none";
   if (locked && lockedProfileName) lockedProfileName.textContent = state.lockedProfile;
   updateRoomCodeBadge();
 }
@@ -566,61 +569,199 @@ function updateVisibility() {
 function renderProfileChoice() {
   if (!profileChoiceList) return;
   profileChoiceList.innerHTML = "";
+  if (!state.lockedProfile) {
+    // Étape 1 : login simple
+    const form = document.createElement("div");
+    form.className = "profile-login-form";
 
-  const form = document.createElement("div");
-  form.className = "profile-login-form";
+    const loginLabel = document.createElement("label");
+    loginLabel.textContent = "Identifiant (Allan, Alexandre, Mathéo)";
+    const loginInput = document.createElement("input");
+    loginInput.type = "text";
+    loginInput.placeholder = "ex : Allan";
 
-  const loginLabel = document.createElement("label");
-  loginLabel.textContent = "Identifiant (Allan, Alexandre, Mathéo)";
-  const loginInput = document.createElement("input");
-  loginInput.type = "text";
-  loginInput.placeholder = "ex : Allan";
+    const passLabel = document.createElement("label");
+    passLabel.textContent = "Mot de passe";
+    const passInput = document.createElement("input");
+    passInput.type = "password";
+    passInput.placeholder = "mot de passe";
 
-  const passLabel = document.createElement("label");
-  passLabel.textContent = "Mot de passe";
-  const passInput = document.createElement("input");
-  passInput.type = "password";
-  passInput.placeholder = "mot de passe";
+    const error = document.createElement("p");
+    error.className = "profile-login-error";
+    error.style.display = "none";
 
-  const error = document.createElement("p");
-  error.className = "profile-login-error";
-  error.style.display = "none";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-its-me";
+    btn.textContent = "Se connecter";
 
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "btn-its-me";
-  btn.textContent = "Se connecter";
-
-  function tryLogin() {
-    const acc = findAccountByLogin(loginInput.value);
-    if (!acc || passInput.value !== acc.password) {
-      error.textContent = "Identifiant ou mot de passe incorrect.";
-      error.style.display = "block";
-      return;
+    function tryLogin() {
+      const acc = findAccountByLogin(loginInput.value);
+      if (!acc || passInput.value !== acc.password) {
+        error.textContent = "Identifiant ou mot de passe incorrect.";
+        error.style.display = "block";
+        return;
+      }
+      state.lockedProfile = acc.name;
+      state.activePlayer = acc.name;
+      // Forcer la liste des joueurs à correspondre aux comptes simples
+      state.players = getAllAccountPlayerNames();
+      saveState();
+      refreshPlayerSelectUI();
+      updateVisibility();
+      renderProfileChoice(); // on reste dans cette section pour choisir la partie
     }
-    state.lockedProfile = acc.name;
-    state.activePlayer = acc.name;
-    // Forcer la liste des joueurs à correspondre aux comptes simples
-    state.players = getAllAccountPlayerNames();
-    saveState();
-    refreshPlayerSelectUI();
-    updateVisibility();
-    renderAll();
+
+    btn.addEventListener("click", tryLogin);
+    passInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryLogin();
+    });
+
+    form.appendChild(loginLabel);
+    form.appendChild(loginInput);
+    form.appendChild(passLabel);
+    form.appendChild(passInput);
+    form.appendChild(btn);
+    form.appendChild(error);
+
+    profileChoiceList.appendChild(form);
+    return;
   }
 
-  btn.addEventListener("click", tryLogin);
-  passInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") tryLogin();
+  // Étape 2 : choix / liste des parties une fois connecté
+  const info = document.createElement("p");
+  info.className = "hint";
+  info.textContent = "Connecté en " + state.lockedProfile + ". Choisis une partie en cours ou crée-en une nouvelle.";
+  profileChoiceList.appendChild(info);
+
+  const actions = document.createElement("div");
+  actions.className = "room-lobby-actions";
+
+  const createBtn = document.createElement("button");
+  createBtn.type = "button";
+  createBtn.className = "btn-its-me";
+  createBtn.textContent = "Créer une nouvelle partie";
+  createBtn.addEventListener("click", () => {
+    const code = generateRoomCode();
+    const base = window.location.origin + window.location.pathname;
+    const shareUrl = `${base}?room=${code}`;
+    const createdWrap = document.createElement("div");
+    createdWrap.className = "room-created-inline";
+    createdWrap.innerHTML = `Partie créée : <strong>${code}</strong>. Lien à partager : <span class="room-link-copy">${shareUrl}</span> — `;
+    const enterBtn = document.createElement("button");
+    enterBtn.type = "button";
+    enterBtn.className = "room-lobby-join";
+    enterBtn.textContent = "Entrer dans cette partie";
+    enterBtn.addEventListener("click", () => {
+      createdWrap.remove();
+      setRoomCode(code);
+    });
+    createdWrap.appendChild(enterBtn);
+    actions.appendChild(createdWrap);
+  });
+  actions.appendChild(createBtn);
+
+  profileChoiceList.appendChild(actions);
+
+  // Rejoindre une partie avec un code (ex : reçu par lien ou partagé)
+  const joinByCodeWrap = document.createElement("div");
+  joinByCodeWrap.className = "room-join-by-code";
+  const joinByCodeLabel = document.createElement("label");
+  joinByCodeLabel.textContent = "Rejoindre avec un code : ";
+  const joinByCodeInput = document.createElement("input");
+  joinByCodeInput.type = "text";
+  joinByCodeInput.placeholder = "ex : ABC123";
+  joinByCodeInput.className = "room-join-input";
+  const joinByCodeBtn = document.createElement("button");
+  joinByCodeBtn.type = "button";
+  joinByCodeBtn.className = "room-lobby-join";
+  joinByCodeBtn.textContent = "Rejoindre";
+  const joinByCodeError = document.createElement("span");
+  joinByCodeError.className = "room-join-error";
+  joinByCodeError.style.display = "none";
+
+  const doJoinByCode = () => {
+    const raw = (joinByCodeInput.value || "").trim().toUpperCase();
+    if (!raw) {
+      joinByCodeError.textContent = " Saisis un code de partie.";
+      joinByCodeError.style.display = "inline";
+      return;
+    }
+    joinByCodeError.style.display = "none";
+    setRoomCode(raw);
+  };
+  joinByCodeBtn.addEventListener("click", doJoinByCode);
+  joinByCodeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doJoinByCode();
   });
 
-  form.appendChild(loginLabel);
-  form.appendChild(loginInput);
-  form.appendChild(passLabel);
-  form.appendChild(passInput);
-  form.appendChild(btn);
-  form.appendChild(error);
+  joinByCodeWrap.appendChild(joinByCodeLabel);
+  joinByCodeWrap.appendChild(joinByCodeInput);
+  joinByCodeWrap.appendChild(joinByCodeBtn);
+  joinByCodeWrap.appendChild(joinByCodeError);
+  profileChoiceList.appendChild(joinByCodeWrap);
 
-  profileChoiceList.appendChild(form);
+  const listWrap = document.createElement("div");
+  listWrap.className = "room-lobby-list";
+  listWrap.textContent = REMOTE_STATE_ENABLED ? "Chargement des parties en cours…" : "Liste des parties non disponible sans Supabase.";
+  profileChoiceList.appendChild(listWrap);
+
+  if (!REMOTE_STATE_ENABLED) return;
+
+  // Récupération et affichage des rooms existantes
+  (async () => {
+    try {
+      const res = await fetch(REMOTE_STATE_URL + "?select=id,payload", {
+        headers: {
+          apikey: REMOTE_STATE_API_KEY,
+          Authorization: `Bearer ${REMOTE_STATE_API_KEY}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (!res.ok) {
+        listWrap.textContent = "Impossible de charger la liste des parties.";
+        return;
+      }
+      const rows = await res.json();
+      listWrap.innerHTML = "";
+      if (!rows || !rows.length) {
+        listWrap.textContent = "Aucune partie pour l’instant. Crée la première !";
+        return;
+      }
+      rows.forEach((row) => {
+        const code = row.id;
+        const payload = row.payload || {};
+        const players = payload.players || getAllAccountPlayerNames();
+        const rowEl = document.createElement("div");
+        rowEl.className = "room-lobby-row";
+
+        const main = document.createElement("div");
+        main.className = "room-lobby-main";
+        const title = document.createElement("div");
+        title.className = "room-lobby-code";
+        title.textContent = "Partie " + code;
+        const playersEl = document.createElement("div");
+        playersEl.className = "room-lobby-players";
+        playersEl.textContent = "Participants : " + players.join(", ");
+        main.appendChild(title);
+        main.appendChild(playersEl);
+
+        const joinBtn = document.createElement("button");
+        joinBtn.type = "button";
+        joinBtn.className = "room-lobby-join";
+        joinBtn.textContent = state.roomCode === code ? "Dans cette partie" : "Rejoindre";
+        joinBtn.disabled = state.roomCode === code;
+        joinBtn.addEventListener("click", () => setRoomCode(code));
+
+        rowEl.appendChild(main);
+        rowEl.appendChild(joinBtn);
+        listWrap.appendChild(rowEl);
+      });
+    } catch (e) {
+      console.error("Erreur de chargement des rooms", e);
+      listWrap.textContent = "Erreur lors du chargement des parties.";
+    }
+  })();
 }
 
 function updateProfileLabels() {
@@ -672,6 +813,12 @@ function initPlayerSelect() {
     });
   }
 
+  if (leaveRoomBtn) {
+    leaveRoomBtn.addEventListener("click", () => {
+      leaveRoom();
+    });
+  }
+
   // Désactiver la création libre de joueurs dans le mode comptes simples.
   if (addPlayerBtn) addPlayerBtn.style.display = "none";
   if (newPlayerInput) newPlayerInput.style.display = "none";
@@ -719,6 +866,19 @@ async function setRoomCode(code) {
     state.seasonPredictions = {};
   }
 
+  saveState();
+  updateVisibility();
+  renderProfileChoice();
+}
+
+function leaveRoom() {
+  if (remotePollInterval) {
+    clearInterval(remotePollInterval);
+    remotePollInterval = null;
+  }
+  state.roomCode = null;
+  state.lockedProfile = null;
+  state.activePlayer = getAllAccountPlayerNames()[0];
   saveState();
   updateVisibility();
   renderProfileChoice();
@@ -1217,45 +1377,18 @@ function renderLeaderboard() {
 }
 
 function fetchRaceResultsFromAPI(round, year) {
-  const url = `https://ergast.com/api/f1/${year}/${round}/results.json`;
-
-  function parseResponse(data) {
-    const races = data?.MRData?.RaceTable?.Races;
-    if (!races || races.length === 0) return null;
-    const results = races[0].Results;
-    if (!results || results.length < 3) return null;
-    const top3 = results
-      .sort((a, b) => parseInt(a.position, 10) - parseInt(b.position, 10))
-      .slice(0, 3)
-      .map((r) => (r.Driver && r.Driver.code) || "");
-    return top3;
-  }
-
-  const proxies = [
-    "https://corsproxy.io/?url=" + encodeURIComponent(url),
-    "https://api.allorigins.win/raw?url=" + encodeURIComponent(url)
-  ];
-
-  function tryFetch(i) {
-    if (i >= proxies.length) return Promise.reject(new Error("API indisponible"));
-    return fetch(proxies[i], { mode: "cors" })
-      .then((r) => {
-        if (!r.ok) throw new Error("Réseau");
-        return r.text();
-      })
-      .then((text) => {
-        try {
-          const data = JSON.parse(text);
-          const top3 = parseResponse(data);
-          if (top3) return top3;
-        } catch (_) {}
-        throw new Error("Aucun résultat");
-      })
-      .catch(() => tryFetch(i + 1));
-  }
-
-  // Utilise uniquement les proxys CORS pour fiabiliser l'appel depuis le navigateur.
-  return tryFetch(0);
+  const apiUrl = `/api/ergast-results?round=${encodeURIComponent(round)}&year=${encodeURIComponent(year || new Date().getFullYear())}`;
+  return fetch(apiUrl)
+    .then((r) => {
+      if (!r.ok) throw new Error("API indisponible");
+      return r.json();
+    })
+    .then((data) => {
+      if (data.error) throw new Error(data.error);
+      const top3 = data.top3;
+      if (!top3 || top3.length < 3) throw new Error("Aucun résultat");
+      return top3;
+    });
 }
 
 function renderResultsComparison(race, wrap) {
@@ -1330,6 +1463,15 @@ function renderResultsComparison(race, wrap) {
 
 function renderAdminResults() {
   resultsAdminEl.innerHTML = "";
+
+  // Seul Allan (maître de jeu) peut gérer les résultats officiels
+  if (state.lockedProfile !== "Allan") {
+    const msg = document.createElement("p");
+    msg.className = "hint";
+    msg.textContent = "Seul Allan peut saisir ou modifier les résultats officiels. Connecte-toi en Allan pour gérer les résultats.";
+    resultsAdminEl.appendChild(msg);
+    return;
+  }
 
   const year = SEASON_YEAR;
   const topBar = document.createElement("div");

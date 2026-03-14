@@ -250,6 +250,20 @@ body {
   color: var(--accent);
 }
 
+.btn-leave-room {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.btn-leave-room:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
 .header-hint {
   margin: 0;
   padding-bottom: 14px;
@@ -364,6 +378,100 @@ body {
 .profile-login-error {
   font-size: 12px;
   color: #f97373;
+}
+
+.room-lobby-actions {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.room-lobby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.room-lobby-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.room-lobby-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.room-lobby-code {
+  font-weight: 600;
+}
+
+.room-lobby-players {
+  color: var(--muted);
+}
+
+.room-lobby-join {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.room-lobby-join:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.room-join-by-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.room-join-by-code label {
+  color: var(--muted);
+}
+
+.room-join-input {
+  width: 120px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.room-join-error {
+  color: #f97373;
+  font-size: 12px;
+}
+
+.room-created-inline {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+  font-size: 13px;
+  width: 100%;
+}
+
+.room-created-inline .room-link-copy {
+  word-break: break-all;
+  color: var(--yellow);
 }
 
 .profile-choice-item {
