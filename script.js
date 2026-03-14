@@ -708,60 +708,75 @@ function renderProfileChoice() {
 
   if (!REMOTE_STATE_ENABLED) return;
 
-  // Récupération et affichage des rooms existantes
-  (async () => {
+  function renderList(rows, errMsg) {
+    listWrap.innerHTML = "";
+    if (errMsg) {
+      listWrap.textContent = errMsg;
+      const retryBtn = document.createElement("button");
+      retryBtn.type = "button";
+      retryBtn.className = "room-lobby-join";
+      retryBtn.textContent = "Réessayer";
+      retryBtn.style.marginTop = "8px";
+      retryBtn.addEventListener("click", () => {
+        listWrap.textContent = "Chargement des parties en cours…";
+        loadRoomsList();
+      });
+      listWrap.appendChild(document.createElement("br"));
+      listWrap.appendChild(retryBtn);
+      return;
+    }
+    if (!rows || !rows.length) {
+      listWrap.textContent = "Aucune partie pour l’instant. Crée la première !";
+      return;
+    }
+    rows.forEach((row) => {
+      const code = row.id;
+      const payload = row.payload || {};
+      const players = payload.players || getAllAccountPlayerNames();
+      const rowEl = document.createElement("div");
+      rowEl.className = "room-lobby-row";
+
+      const main = document.createElement("div");
+      main.className = "room-lobby-main";
+      const title = document.createElement("div");
+      title.className = "room-lobby-code";
+      title.textContent = "Partie " + code;
+      const playersEl = document.createElement("div");
+      playersEl.className = "room-lobby-players";
+      playersEl.textContent = "Participants : " + players.join(", ");
+      main.appendChild(title);
+      main.appendChild(playersEl);
+
+      const joinBtn = document.createElement("button");
+      joinBtn.type = "button";
+      joinBtn.className = "room-lobby-join";
+      joinBtn.textContent = state.roomCode === code ? "Dans cette partie" : "Rejoindre";
+      joinBtn.disabled = state.roomCode === code;
+      joinBtn.addEventListener("click", () => setRoomCode(code));
+
+      rowEl.appendChild(main);
+      rowEl.appendChild(joinBtn);
+      listWrap.appendChild(rowEl);
+    });
+  }
+
+  async function loadRoomsList() {
     try {
-      const res = await fetch(REMOTE_STATE_URL + "?select=id,payload", {
-        headers: {
-          apikey: REMOTE_STATE_API_KEY,
-          Authorization: `Bearer ${REMOTE_STATE_API_KEY}`,
-          "Content-Type": "application/json"
-        }
-      });
-      if (!res.ok) {
-        listWrap.textContent = "Impossible de charger la liste des parties.";
+      const res = await fetch("/api/rooms-list");
+      const data = await res.json();
+      if (data && data.error) {
+        renderList(null, data.error);
         return;
       }
-      const rows = await res.json();
-      listWrap.innerHTML = "";
-      if (!rows || !rows.length) {
-        listWrap.textContent = "Aucune partie pour l’instant. Crée la première !";
-        return;
-      }
-      rows.forEach((row) => {
-        const code = row.id;
-        const payload = row.payload || {};
-        const players = payload.players || getAllAccountPlayerNames();
-        const rowEl = document.createElement("div");
-        rowEl.className = "room-lobby-row";
-
-        const main = document.createElement("div");
-        main.className = "room-lobby-main";
-        const title = document.createElement("div");
-        title.className = "room-lobby-code";
-        title.textContent = "Partie " + code;
-        const playersEl = document.createElement("div");
-        playersEl.className = "room-lobby-players";
-        playersEl.textContent = "Participants : " + players.join(", ");
-        main.appendChild(title);
-        main.appendChild(playersEl);
-
-        const joinBtn = document.createElement("button");
-        joinBtn.type = "button";
-        joinBtn.className = "room-lobby-join";
-        joinBtn.textContent = state.roomCode === code ? "Dans cette partie" : "Rejoindre";
-        joinBtn.disabled = state.roomCode === code;
-        joinBtn.addEventListener("click", () => setRoomCode(code));
-
-        rowEl.appendChild(main);
-        rowEl.appendChild(joinBtn);
-        listWrap.appendChild(rowEl);
-      });
+      const rows = Array.isArray(data) ? data : [];
+      renderList(rows);
     } catch (e) {
       console.error("Erreur de chargement des rooms", e);
-      listWrap.textContent = "Erreur lors du chargement des parties.";
+      renderList(null, "Erreur lors du chargement des parties. Vérifiez votre connexion.");
     }
-  })();
+  }
+
+  loadRoomsList();
 }
 
 function updateProfileLabels() {
