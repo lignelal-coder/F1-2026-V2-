@@ -609,7 +609,13 @@ function renderProfileChoice() {
       saveState();
       refreshPlayerSelectUI();
       updateVisibility();
-      renderProfileChoice(); // on reste dans cette section pour choisir la partie
+      // Si on a déjà une partie : afficher le contenu principal (calendrier, prédictions, classement)
+      if (state.roomCode && state.lockedProfile) {
+        renderAll();
+        renderAdminResults();
+      } else {
+        renderProfileChoice(); // sinon on reste pour choisir une partie
+      }
     }
 
     btn.addEventListener("click", tryLogin);
@@ -1793,18 +1799,19 @@ initPlayerSelect();
 initRoomSection();
 updateSeasonYearBadge();
 updateVisibility();
-if (state.roomCode) {
-  if (state.lockedProfile) {
-    refreshPlayerSelectUI();
-    updateProfileLabels();
-    renderRaces();
-    renderSeasonPredictions();
-    renderAdminResults();
-    renderLeaderboard();
-    renderDriversGrid();
-  } else {
-    renderProfileChoice();
-  }
+// Au démarrage :
+// - si un profil + une partie sont déjà verrouillés → on affiche directement l'app complète
+// - sinon → on affiche l'écran \"Qui es-tu ?\" (login + choix/création de partie)
+if (state.lockedProfile && state.roomCode) {
+  refreshPlayerSelectUI();
+  updateProfileLabels();
+  renderRaces();
+  renderSeasonPredictions();
+  renderAdminResults();
+  renderLeaderboard();
+  renderDriversGrid();
+} else {
+  renderProfileChoice();
 }
 
 // Si une synchro distante est configurée (Supabase), on récupère le state partagé
@@ -1825,18 +1832,16 @@ if (state.roomCode) {
 
   // Re-render complet avec le state partagé
   updateVisibility();
-  if (state.roomCode) {
-    if (state.lockedProfile) {
-      refreshPlayerSelectUI();
-      updateProfileLabels();
-      renderRaces();
-      renderSeasonPredictions();
-      renderAdminResults();
-      renderLeaderboard();
-      renderDriversGrid();
-    } else {
-      renderProfileChoice();
-    }
+  if (state.lockedProfile && state.roomCode) {
+    refreshPlayerSelectUI();
+    updateProfileLabels();
+    renderRaces();
+    renderSeasonPredictions();
+    renderAdminResults();
+    renderLeaderboard();
+    renderDriversGrid();
+  } else {
+    renderProfileChoice();
   }
 })();
 
